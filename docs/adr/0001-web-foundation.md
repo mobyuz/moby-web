@@ -1,24 +1,23 @@
-# 0001 · Statik veb karkasi
+# 0001 · Static website foundation
 
-2026-yil 3-noyabr · Wb0
+November 3, 2026 · Wb0
 
-V1.0 texnik reja veb uchun React, TypeScript, Vite va Tailwind’ni belgilaydi.
-Vite statik `dist/` yig‘adi. Rust/Axum backend ma’lumot va hisoblarni boshqaradi.
-Server renderingi yoki alohida veb server ilovasi bu bosqich uchun qo‘shimcha
-ishga tushirish va deploy talab qilardi. Dizayn Tailwind orqali, Moby yuzining
-harakati esa kichik CSS animatsiyasi orqali berildi.
+The Moby v1.0 technical plan specifies React, TypeScript, Vite, and Tailwind.
+Vite produces a static build in `dist/`. The Rust and Axum backend owns
+accounts and usage. Server-side rendering would add a web server and a
+separate deployment for the landing page. Tailwind styles the page, and
+CSS animates Moby’s face.
 
-API klienti uchun OpenAPI’dan tip generatsiyasi tanlandi. Jonli serverdan olish
-buildni tarmoq va ayni paytda ishlayotgan API versiyasiga bog‘lab qo‘yardi.
-Mahalliy checkoutda reliz artefakti topilmagani sabab Wb0 uchun commitga qadalgan
-nusxa ishlatildi. Demo tarmoq klienti B6 kontrakti tasdiqlangach qo‘shiladi.
+TypeScript declarations come from a pinned OpenAPI snapshot so the build
+works independently of a running API server. Wb0 pins the contract to an
+upstream commit. The guest demo client will use the B6 release contract.
 
-`moby-ui` checkouti mavjud emas. Wb0 lokal `MobyFace` komponentidan foydalanadi.
-Wb1 da tasdiqlangan `@mobyuz/moby-ui` reliziga ulanish rejalashtirilgan.
+Wb0 uses a local `MobyFace` component. Wb1 will integrate a versioned
+`@mobyuz/moby-ui` release when it is available.
 
-Qaror Moby dasturiy tizimining v1.0 texnik rejasiga asoslanadi.
+## References
 
-Texnik manbalar
-[Vite](https://vite.dev/guide/), [React](https://react.dev/reference/react-dom/client/createRoot),
-[Tailwind](https://tailwindcss.com/docs/installation/using-vite) va
-[OpenAPI TypeScript](https://openapi-ts.dev/cli).
+- [Vite](https://vite.dev/guide/)
+- [React](https://react.dev/reference/react-dom/client/createRoot)
+- [Tailwind CSS](https://tailwindcss.com/docs/installation/using-vite)
+- [OpenAPI TypeScript](https://openapi-ts.dev/cli)

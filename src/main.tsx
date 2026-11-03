@@ -4,7 +4,7 @@ import { App } from "./App";
 import "./styles.css";
 
 const root = document.getElementById("root");
-if (!root) throw new Error("Moby sahifasining root elementi topilmadi");
+if (!root) throw new Error("The Moby page root element is missing");
 
 createRoot(root).render(
   <StrictMode>

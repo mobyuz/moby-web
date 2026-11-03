@@ -1,7 +1,7 @@
-# O‘zgarishlar
+# Changelog
 
 ## Unreleased
 
-- Wb0 uchun React, TypeScript, Vite va Tailwind asosidagi statik landing.
-- API kontrakti uchun qadalgan OpenAPI nusxasi, generatsiya va CI tekshiruvi.
-- Klaviatura navigatsiyasi, tor ekran va harakatni kamaytirish sozlamasi uchun Playwright sinovlari.
+- Static landing page built with React, TypeScript, Vite, and Tailwind for Wb0.
+- Pinned OpenAPI snapshot, TypeScript generation, and a CI drift check.
+- Playwright coverage for keyboard navigation, narrow screens, and reduced motion.

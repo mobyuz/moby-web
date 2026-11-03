@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "GPL-3.0-only",
-  "description": "Moby robotining statik veb-sayti",
+  "description": "The website for the Moby desktop companion robot",
   "engines": {
     "node": "24.13.0",
     "npm": "11.6.2"

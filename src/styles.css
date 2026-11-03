@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #101413;
+  --color-panel: #191f1c;
+  --color-line: #303a34;
+  --color-text: #eef4ec;
+  --color-subtle: #b3c1b7;
+  --color-accent: #b7f8ba;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-text);
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+section[id] { scroll-margin-top: 1rem; }
+
+.shell {
+  width: min(100% - 2.5rem, 72rem);
+  margin-inline: auto;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 2;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  transform: translateY(calc(-100% - 2rem));
+}
+
+.skip-link:focus { transform: none; }
+
+.eyebrow {
+  color: var(--color-accent);
+  font: 600 0.75rem/1.5 ui-monospace, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.action {
+  padding: 0.85rem 1.2rem;
+  border-radius: 0.65rem;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.action:hover { background: #d1fbd3; }
+
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.045em;
+}
+
+.hero-display {
+  display: grid;
+  position: relative;
+  isolation: isolate;
+  place-items: center;
+  min-height: clamp(17rem, 42vw, 29rem);
+  padding: 2.5rem 1.25rem 4.25rem;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(ellipse at 50% 42%, #385849 0%, transparent 70%),
+    linear-gradient(0deg, #19271f 0%, #18231e 100%);
+}
+
+.hero-display::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: linear-gradient(#b7f8ba12 1px, transparent 1px), linear-gradient(90deg, #b7f8ba12 1px, transparent 1px);
+  background-size: 2.4rem 2.4rem;
+  mask-image: radial-gradient(ellipse at center, #000 10%, transparent 78%);
+  content: "";
+}
+
+.display-caption {
+  position: absolute;
+  inset: auto 1rem 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #b7f8ba38;
+  color: #d0e0d3;
+  font: 0.7rem/1.4 ui-monospace, monospace;
+  letter-spacing: 0.09em;
+}
+
+.robot {
+  position: relative;
+  width: min(82%, 18.25rem);
+  aspect-ratio: 5 / 4;
+}
+
+.robot-body {
+  position: absolute;
+  inset: 0 0 12%;
+  padding: 8% 8% 12%;
+  border: 1px solid #65786a;
+  border-radius: 20% / 25%;
+  background: linear-gradient(150deg, #6d8074, #29352f 41%, #131b17 75%);
+  box-shadow: inset 0 1px 1px #c9dbce77, inset 0 -7px 11px #05090780, 0 0.9rem 1.5rem #09130db0;
+}
+
+.robot-screen {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  border: 1px solid #728c7a66;
+  border-radius: 16% / 23%;
+  background: radial-gradient(ellipse at 50% 50%, #182e23, #07110c 75%);
+  box-shadow: inset 0 5px 18px #000c, 0 1px 2px #9daea36b;
+}
+
+.robot-eyes {
+  display: flex;
+  width: 48%;
+  height: 45%;
+  justify-content: space-between;
+  animation: blink 7s infinite;
+}
+
+.robot-eyes span {
+  width: 31%;
+  border-radius: 45% / 30%;
+  background: var(--color-accent);
+  box-shadow: 0 0 1.25rem #9bf7af9c, inset 0 0 0.4rem #ebffec;
+}
+
+.robot-light {
+  position: absolute;
+  bottom: 7%;
+  left: calc(50% - 0.17rem);
+  width: 0.34rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0.6rem #b7f8bacc;
+}
+
+.robot-stand {
+  position: absolute;
+  inset: 74% 12% 3%;
+  border-radius: 12% / 32%;
+  background: linear-gradient(#26352d, #4b5b51 57%, #202c25);
+  box-shadow: 0 0.25rem 0.55rem #0008;
+}
+
+.robot-shadow {
+  position: absolute;
+  inset: 86% -16% -6%;
+  border-radius: 50%;
+  background: #09140da8;
+  filter: blur(0.65rem);
+}
+
+@keyframes blink {
+  0%, 46%, 50%, 100% { transform: scaleY(1); }
+  48% { transform: scaleY(0.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .robot-eyes { animation: none; }
+}

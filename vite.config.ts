@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    // @mobyuz/moby-ui is a sibling checkout linked with file:, so it has its own node_modules. Share one React.
+    resolve: { dedupe: ["react", "react-dom", "three"] },
     build: {
       rolldownOptions: {
         input: [
@@ -20,6 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      fs: { allow: [".", "../moby-ui"] },
       proxy: {
         "^/(?:v1/|(?:health|ready|openapi\\.json)(?:\\?|$))": {
           target: MOBY_API_ORIGIN || "http://127.0.0.1:8080",

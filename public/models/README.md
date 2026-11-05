@@ -25,7 +25,7 @@
 
 ## What the files are
 
-`moby-mini.glb` holds 17 rigid parts (front shell, rear shell, screen, microphone, speaker,
+`moby-mini.glb` holds 17 rigid nodes (front shell, rear shell, screen, microphone, speaker,
 amplifier, ESP32-S3 board, controls, servo, supports, carrier board, USB-C guide, two feet and two
 soles). Each part node is in the assembled pose and carries two glTF extras: `moby_label` (its name) and
 `moby_explode` (offset to the exploded pose in metres, glTF axes). The website moves the node by that

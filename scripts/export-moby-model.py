@@ -87,6 +87,8 @@ for obj in bpy.data.objects:
         delta = Matrix(exploded[obj.name]) @ obj.matrix_world.inverted()
         offsets[obj.name] = tuple(round(v, 5) for v in delta.to_translation())
 
+offsets["ScreenFace"] = offsets["M1 · LCDwiki MC096VX SSD1306 0.96 inch"]   # rides with the OLED module
+
 # 3. The OLED eyes give the screen position and size; remove them and add the face quad.
 eyes = [o for o in bpy.data.objects if o.name.startswith("M1 · Eyes")]
 corners = [o.matrix_world @ Vector(c) for o in eyes for c in o.bound_box]
@@ -133,7 +135,7 @@ for obj in list(bpy.data.objects):
     if obj.name.startswith("M1 · Eyes") or obj.name.startswith(DROP):
         bpy.data.objects.remove(obj, do_unlink=True)
         continue
-    pid = "screen" if obj.name == "ScreenFace" else part_of(obj.name)
+    pid = "screen-face" if obj.name == "ScreenFace" else part_of(obj.name)
     if pid is None:
         print("UNASSIGNED", obj.name)
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -144,6 +146,7 @@ for obj in [o for o in bpy.data.objects if o.type != "MESH"]:
     bpy.data.objects.remove(obj, do_unlink=True)   # wires, lights, cameras
 
 labels = {pid: label for pid, label, _ in PARTS}
+labels["screen-face"] = "Screen face"   # kept as its own node: the page draws the face over it
 manifest = {}
 for pid, objs in groups.items():
     deltas = {offsets[o.name] for o in objs if o.name in offsets}

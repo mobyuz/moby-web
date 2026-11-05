@@ -399,10 +399,8 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
   font-size: 0.78rem;
   line-height: 1.35;
   color: var(--subtle);
-  translate: var(--dx) var(--dy);
+  translate: var(--tx, 0px) var(--ty, 0px);
 }
-.part[data-side="left"] .part-tag { translate: calc(var(--dx) - 100%) calc(var(--dy) - 50%); text-align: right; }
-.part[data-side="right"] .part-tag { translate: var(--dx) calc(var(--dy) - 50%); }
 .part-tag strong {
   display: block;
   margin-bottom: 0.1rem;

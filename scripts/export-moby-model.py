@@ -127,6 +127,11 @@ for mat in bpy.data.materials:
             if hasattr(mat, attr):
                 setattr(mat, attr, value)
 
+# Web lighting is flatter than the Cycles studio, so the pale shell reads green. Lift and neutralise it.
+for mat in bpy.data.materials:
+    if mat.name.startswith("Fern") and mat.use_nodes:
+        mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.42, 0.44, 0.39, 1)
+
 # 5. Join per part.
 groups = {}
 for obj in list(bpy.data.objects):

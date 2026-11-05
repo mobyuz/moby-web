@@ -100,7 +100,7 @@ const tools = [
   ["search_files", "Searches file names in a project.", "A project folder you added"],
   ["open_project", "Opens a project.", "Your confirmation, every time"],
   ["open_app", "Opens a program.", "Your confirmation, every time"],
-  ["create_reminder", "Sets a reminder.", "Nothing extra"],
+  ["create_reminder", "Sets a reminder.", "No folder or program needed"],
 ] as const;
 
 export function Tools() {

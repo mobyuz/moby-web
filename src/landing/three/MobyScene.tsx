@@ -116,6 +116,9 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
   const home = useRef({ x: 0, y: 0, h: 1 });
   const ready = useRef(false);
   const frames = useRef(0);
+  const lastAlpha = useRef(0);
+  const copyRight = useRef(0);
+  const tagSizes = useRef(new Map<string, { w: number; h: number }>());
   const timer = useRef(0);
   const labels = useRef(new Map<string, HTMLElement>());
   const raycaster = useMemo(() => new Raycaster(), []);
@@ -142,7 +145,15 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
     labels.current = new Map(
       [...(labelsEl.current?.querySelectorAll<HTMLElement>("[data-part]") ?? [])].map((el) => [el.dataset.part ?? "", el]),
     );
-  }, [labelsEl]);
+    // Tag sizes and the right edge of the copy column are measured once per resize, not per frame.
+    tagSizes.current = new Map(
+      [...labels.current].map(([id, el]) => {
+        const tag = el.querySelector<HTMLElement>(".part-tag");
+        return [id, { w: tag?.offsetWidth ?? 184, h: tag?.offsetHeight ?? 64 }] as const;
+      }),
+    );
+    copyRight.current = document.querySelector(".copy-inside .lead")?.getBoundingClientRect().right ?? 0;
+  }, [labelsEl, size.width, size.height]);
 
   useFrame((_state, delta) => {
     clock.current += Math.min(delta, 0.05);
@@ -190,15 +201,44 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
 
     // Part labels follow their parts.
     const labelAlpha = smooth(range(open, 0.78, 1));
-    for (const label of PART_LABELS) {
-      const el = labels.current.get(label.id);
-      const part = model.byName.get(label.id);
-      if (!el || !part) continue;
-      part.box.getCenter(tmp.v).add(part.object.position);
-      tmp.v.project(camera);
-      el.style.transform = `translate3d(${((tmp.v.x * 0.5 + 0.5) * size.width).toFixed(1)}px,${((-tmp.v.y * 0.5 + 0.5) * size.height).toFixed(1)}px,0)`;
-      el.style.opacity = labelAlpha.toFixed(2);
+    if (labelAlpha > 0 || lastAlpha.current > 0) {
+      // Place each tag by its preferred offset, keep it on screen and clear of the copy, then nudge overlaps apart.
+      const minX = narrow ? 8 : Math.max(8, copyRight.current + 12);
+      const placed: { el: HTMLElement; ax: number; ay: number; x: number; y: number; w: number; h: number; line: SVGLineElement | null }[] = [];
+      for (const label of PART_LABELS) {
+        const el = labels.current.get(label.id);
+        const part = model.byName.get(label.id);
+        const tag = tagSizes.current.get(label.id);
+        if (!el || !part || !tag) continue;
+        part.box.getCenter(tmp.v).add(part.object.position);
+        tmp.v.project(camera);
+        const ax = (tmp.v.x * 0.5 + 0.5) * size.width;
+        const ay = (-tmp.v.y * 0.5 + 0.5) * size.height;
+        const x = Math.min(Math.max(label.dx < 0 ? ax + label.dx - tag.w : ax + label.dx, minX), size.width - 8 - tag.w);
+        const y = Math.min(Math.max(ay + label.dy - tag.h / 2, 76), size.height - 40 - tag.h);
+        placed.push({ el, ax, ay, x, y, w: tag.w, h: tag.h, line: el.querySelector("line") });
+      }
+      placed.sort((a, b) => a.y - b.y);
+      placed.forEach((tag, index) => {
+        for (const other of placed.slice(0, index)) {
+          if (tag.x < other.x + other.w + 8 && other.x < tag.x + tag.w + 8 && tag.y < other.y + other.h + 8 && other.y < tag.y + tag.h + 8) {
+            tag.y = other.y + other.h + 8;
+          }
+        }
+      });
+      for (const tag of placed) {
+        tag.el.style.transform = `translate3d(${tag.ax.toFixed(1)}px,${tag.ay.toFixed(1)}px,0)`;
+        tag.el.style.opacity = labelAlpha.toFixed(2);
+        tag.el.style.setProperty("--tx", `${(tag.x - tag.ax).toFixed(1)}px`);
+        tag.el.style.setProperty("--ty", `${(tag.y - tag.ay).toFixed(1)}px`);
+        // The leader runs to the nearest point on the tag.
+        const nx = Math.min(Math.max(tag.ax, tag.x), tag.x + tag.w) - tag.ax;
+        const ny = Math.min(Math.max(tag.ay, tag.y), tag.y + tag.h) - tag.ay;
+        tag.line?.setAttribute("x2", nx.toFixed(1));
+        tag.line?.setAttribute("y2", ny.toFixed(1));
+      }
     }
+    lastAlpha.current = labelAlpha;
 
     // The real MobyFace is pinned onto the screen quad with a perspective transform.
     const face = faceEl.current;

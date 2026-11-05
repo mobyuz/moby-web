@@ -164,7 +164,7 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
   height: var(--header);
   border-bottom: 1px solid transparent;
   background: color-mix(in srgb, var(--canvas) 0%, transparent);
-  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 .site-header[data-scrolled] {
   border-bottom-color: var(--line);
@@ -173,10 +173,20 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
 }
 .header-row { display: flex; height: 100%; align-items: center; justify-content: space-between; gap: 1.5rem; }
 .brand { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; font-weight: 750; letter-spacing: -0.05em; text-decoration: none; }
-.brand img { filter: light-dark(none, invert(1)); }
 .header-nav { display: flex; gap: 1.6rem; }
-.header-nav a { color: var(--subtle); font-size: 0.93rem; font-weight: 500; text-decoration: none; transition: color 0.2s; }
-.header-nav a:hover { color: var(--text); }
+.header-nav a { position: relative; padding-block: 0.35rem; color: var(--subtle); font-size: 0.93rem; font-weight: 500; text-decoration: none; transition: color 0.18s; }
+.header-nav a::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1.5px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+.header-nav a:hover, .header-nav a[data-active] { color: var(--text); }
+.header-nav a:hover::after, .header-nav a[data-active]::after { transform: scaleX(1); }
 .header-actions { display: flex; align-items: center; gap: 0.6rem; }
 .menu-button {
   display: none;
@@ -572,19 +582,30 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
 /* ---------- Footer ---------- */
 
 .site-footer { border-top: 1px solid var(--line); background: var(--panel); }
-.footer-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 3rem; padding-block: 4rem 3rem; }
+.footer-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr); gap: clamp(2rem, 1rem + 5vw, 6rem); padding-block: 4rem 3.5rem; }
 .footer-intro { display: grid; align-content: start; gap: 1rem; }
-.footer-intro p { max-width: 20rem; color: var(--subtle); }
-.footer-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
-.footer-links div { display: grid; align-content: start; gap: 0.6rem; }
+.footer-intro p { max-width: 26rem; color: var(--subtle); text-wrap: pretty; }
+.footer-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+.footer-links > div { display: grid; align-content: start; gap: 0.7rem; }
 .footer-links h2 { margin-bottom: 0.4rem; font: 500 0.7rem/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--subtle); }
-.footer-links a { display: inline-flex; width: fit-content; align-items: center; gap: 0.3rem; color: var(--text); font-size: 0.93rem; text-decoration: none; }
-.footer-links a:hover { text-decoration: underline; text-underline-offset: 0.25em; }
+.footer-links a {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition: background-size 0.2s ease;
+}
+.footer-links a:hover, .footer-links a:focus-visible { background-size: 100% 1px; }
+.site-footer [data-reveal] { transition-duration: 0.25s; }
 .footer-end { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding-block: 1.5rem 2.25rem; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--subtle); }
-.footer-end a { text-decoration: none; }
-@media (max-width: 56rem) {
-  .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
-  .footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.footer-end a { text-decoration: none; transition: color 0.18s; }
+.footer-end a:hover { color: var(--text); }
+@media (max-width: 52rem) {
+  .footer-grid { grid-template-columns: 1fr; gap: 2.25rem; padding-block: 3rem 2.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

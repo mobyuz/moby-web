@@ -115,6 +115,7 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
   const clock = useRef(0);
   const home = useRef({ x: 0, y: 0, h: 1 });
   const ready = useRef(false);
+  const frames = useRef(0);
   const timer = useRef(0);
   const labels = useRef(new Map<string, HTMLElement>());
   const raycaster = useMemo(() => new Raycaster(), []);
@@ -125,7 +126,7 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
   useEffect(() => {
     const listener = () => invalidate();
     storyProgress.listeners.add(listener);
-    return () => { storyProgress.listeners.delete(listener); window.clearTimeout(timer.current); };
+    return () => { storyProgress.listeners.delete(listener); window.clearTimeout(timer.current); timer.current = 0; };
   }, [invalidate]);
 
   // Where the poster frame sits inside the canvas.
@@ -204,7 +205,7 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
     if (face && model.faceBox && model.face) {
       const { min, max } = model.faceBox;
       const matrix = model.face.object.matrixWorld;
-      const corners = [[min.x, min.y], [max.x, min.y], [max.x, max.y], [min.x, max.y]].map(([x = 0, y = 0]) => {
+      const corners = [[min.x, max.y], [max.x, max.y], [max.x, min.y], [min.x, min.y]].map(([x = 0, y = 0]) => {
         const point = tmp.v.set(x, y, min.z).applyMatrix4(matrix).project(camera);
         return [(point.x * 0.5 + 0.5) * size.width, (-point.y * 0.5 + 0.5) * size.height];
       });
@@ -233,7 +234,9 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
       face.style.opacity = visible ? "1" : "0";
     }
 
-    if (!ready.current) {
+    // Reveal the scene after a few frames, once the shaders have compiled, so it never flashes empty.
+    frames.current += 1;
+    if (!ready.current && frames.current > 4) {
       ready.current = true;
       onReady();
     }
@@ -255,20 +258,20 @@ export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady }: 
       gl={{ alpha: true, antialias: true, powerPreference: "default" }}
       onCreated={({ gl }) => {
         gl.toneMapping = NeutralToneMapping;
-        gl.toneMappingExposure = 1.05;
+        gl.toneMappingExposure = 1.35;
         gl.setClearColor(0x000000, 0);
       }}
       aria-hidden="true"
     >
       <PerformanceMonitor onDecline={() => setDpr([1, 1])} />
       <Environment resolution={128} frames={1}>
-        <Lightformer form="rect" intensity={2.4} position={[2.5, 2.5, 3]} scale={[5, 3, 1]} />
-        <Lightformer form="rect" intensity={1.2} position={[-3, 1, 1]} scale={[3, 4, 1]} />
-        <Lightformer form="rect" intensity={1.6} position={[0, 3, -3]} scale={[6, 2, 1]} />
-        <Lightformer form="ring" intensity={0.8} position={[0, -2, 2]} scale={4} />
+        <Lightformer form="rect" intensity={5} position={[2.5, 2.5, 3]} scale={[5, 3, 1]} />
+        <Lightformer form="rect" intensity={3} position={[-3, 1, 1]} scale={[3, 4, 1]} />
+        <Lightformer form="rect" intensity={3} position={[0, 3, -3]} scale={[6, 2, 1]} />
+        <Lightformer form="ring" intensity={1.6} position={[0, -2, 2]} scale={4} />
       </Environment>
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[1.5, 3, 2.5]} intensity={1.4} />
+      <ambientLight intensity={0.9} />
+      <directionalLight position={[1.5, 3, 2.5]} intensity={2.4} />
       <Rig faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} onReady={onReady} />
     </Canvas>
   );

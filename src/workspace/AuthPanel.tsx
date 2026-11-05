@@ -1,12 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { EXPRESSION_META, MobyFace } from "@mobyuz/moby-ui";
 import { apiJson, apiResponse, jsonBody, type Model } from "../api/workspace";
 import { Icon } from "../Icon";
+import { useReducedMotion } from "../landing/hooks";
+import type { Expression } from "../landing/story";
 import { TaskFeedback, useTask, valueOf } from "./controls";
 import { googleAvailableHere, googleProof, googleSignInHref, registrationPolicies } from "./google";
+import "./auth.css";
+
+const faceCycle: Expression[] = ["idle", "listening", "thinking", "happy"];
 
 const views = {
-  login: { title: "Sign in to Moby", description: "Your companion. Your workspace. All in one place.", button: "Sign in" },
-  register: { title: "Create your account", description: "A little more possibility for your everyday.", button: "Create account" },
+  login: { title: "Sign in to Moby", description: "Use your Moby account in the browser. It is the same account as in the Windows app.", button: "Sign in" },
+  register: { title: "Create your account", description: "You will confirm your email next. Cloud voice is a separate choice you make later.", button: "Create account" },
   verify: { title: "Verify your email", description: "Paste the link from your verification email and enter your password.", button: "Verify email" },
   forgot: { title: "Reset your password", description: "Enter your email address to request a reset link.", button: "Send reset link" },
   reset: { title: "Choose a new password", description: "Paste the link from your reset email and choose a new password.", button: "Update password" },
@@ -31,6 +37,16 @@ export function AuthPanel({ onSignIn }: { onSignIn: (tokens: Model<"TokenPair">)
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const task = useTask();
+  const reduced = useReducedMotion();
+  const [step, setStep] = useState(0);
+  const expression: Expression = task.busy ? "thinking" : task.feedback?.kind === "error" ? "confused" : (faceCycle[step % faceCycle.length] ?? "idle");
+
+  // The face on the left idles through a few expressions. It stops when motion is reduced.
+  useEffect(() => {
+    if (reduced) return;
+    const id = window.setInterval(() => setStep((current) => current + 1), 3200);
+    return () => window.clearInterval(id);
+  }, [reduced]);
   const view = views[mode];
   const needsEmail = mode === "login" || mode === "register" || mode === "forgot";
   const needsToken = mode === "verify" || mode === "reset";
@@ -91,59 +107,58 @@ export function AuthPanel({ onSignIn }: { onSignIn: (tokens: Model<"TokenPair">)
   }
 
   return (
-    <section className="auth-layout" aria-labelledby="auth-heading">
-      <aside className="auth-aside" aria-label="About Moby Web">
-        <div className="auth-aside-heading">
-          <span className="auth-aside-label"><span /> A small companion. A big idea.</span>
-          <p className="auth-aside-title">Make room for<br /><em>a little Moby.</em></p>
-          <p className="auth-aside-copy">A place to think out loud, explore ideas, and connect with your companion.</p>
-        </div>
-        <div className="auth-scene" aria-hidden="true">
-          <div className="auth-orbit auth-orbit-outer" />
-          <div className="auth-orbit auth-orbit-inner" />
-          <div className="auth-mark">
-            <img src="/moby.svg" alt="" width="176" height="171" />
-          </div>
-          <div className="auth-scene-chip auth-scene-chat"><span className="auth-scene-icon"><Icon name="message" size={19} /></span><span>Ideas start here<small>Meet your assistant</small></span></div>
-          <div className="auth-scene-chip auth-scene-voice"><Icon name="mic" size={18} /><span className="auth-wave"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span></div>
-          <span className="auth-scene-spark auth-scene-spark-one">+</span>
-          <span className="auth-scene-spark auth-scene-spark-two">+</span>
-        </div>
-        <div className="auth-aside-foot"><span><Icon name="shield" size={17} /> Your data, your control</span><a href="https://github.com/mobyuz/moby-web">Built in the open <Icon name="external" size={15} /></a></div>
+    <section className="au-card" aria-labelledby="auth-heading">
+      <aside className="au-aside" aria-label="About Moby Web" data-expression={expression}>
+        <p className="au-eyebrow">Moby Web</p>
+        <p className="au-aside-title">Talk to Moby from any browser.</p>
+        <p className="au-aside-copy">
+          The same account works in the Windows app. Conversations in the app stay on your computer, and cloud voice stays off until you agree to it.
+        </p>
+        <figure className="au-figure">
+          <img src="/models/moby-mini-poster.webp" width="1200" height="1000" alt="Moby Mini, a small slate-grey desk robot with a face on an OLED screen" decoding="async" />
+          <figcaption>
+            <MobyFace expression={expression} size={72} decorative />
+            <span><strong>Moby Mini</strong> {EXPRESSION_META[expression].status}</span>
+          </figcaption>
+        </figure>
+        <ul className="au-points">
+          <li><Icon name="message" size={17} /> Chat with the assistant</li>
+          <li><Icon name="mic" size={17} /> Voice tools in English, Russian and Uzbek</li>
+          <li><Icon name="shield" size={17} /> Export or delete your data any time</li>
+        </ul>
       </aside>
-      <div className="auth-panel">
-        <div className="auth-content">
+      <div className="au-panel">
+        <div className="au-content">
           {mode !== "login" && (
-            <a href="/app/" className="auth-back"><Icon name="back" size={17} /> Back to sign in</a>
+            <a href="/app/" className="au-back"><Icon name="back" size={17} /> Back to sign in</a>
           )}
-          {mode === "login" && <p className="auth-welcome">Welcome back</p>}
           <h1 id="auth-heading">{view.title}</h1>
-          <p className="auth-description">{view.description}</p>
-          <TaskFeedback feedback={task.feedback} />
+          <p className="au-description">{view.description}</p>
+          <div className="au-feedback" key={task.feedback?.message ?? "none"}><TaskFeedback feedback={task.feedback} /></div>
           {(mode === "login" || mode === "register") && (
-            <div className="auth-social">
-              <a className="google-button" href={googleSignInHref}><img src="/google-g.png" width="20" height="20" alt="" /> Continue with Google</a>
-              <p className="auth-separator">or continue with email</p>
+            <div className="au-social">
+              <a className="au-google" href={googleSignInHref}><img src="/google-g.png" width="20" height="20" alt="" /> Continue with Google</a>
+              <p className="au-separator"><span>or use email</span></p>
             </div>
           )}
-          <form key={mode} className="auth-form" onSubmit={submit} aria-labelledby="auth-heading">
+          <form key={mode} className="au-form" onSubmit={submit} aria-labelledby="auth-heading" aria-busy={task.busy}>
             {needsEmail && (
-              <label className="field">Email address
+              <label className="au-field">Email address
                 <input type="email" name="email" autoComplete="email" placeholder="you@example.com" maxLength={254} required />
               </label>
             )}
             {needsToken && (
-              <label className="field">{mode === "verify" ? "Verification link or code" : "Password reset link or code"}
+              <label className="au-field">{mode === "verify" ? "Verification link or code" : "Password reset link or code"}
                 <input name="token" autoComplete="off" spellCheck={false} maxLength={2048} required />
               </label>
             )}
             {mode !== "forgot" && mode !== "google" && (
-              <div className="field">
-                <div className="auth-field-heading">
+              <div className="au-field">
+                <div className="au-field-heading">
                   <label htmlFor="auth-password">{mode === "reset" ? "New password" : "Password"}</label>
                   {mode === "login" && <a href="/app/?view=forgot">Forgot password?</a>}
                 </div>
-                <div className="auth-password">
+                <div className="au-password">
                   <input id="auth-password" type={showPassword ? "text" : "password"} name="password" required minLength={15} maxLength={128}
                     placeholder={newPassword ? "Create a strong password" : "Enter your password"}
                     spellCheck={false} autoCapitalize="none" autoComplete={newPassword ? "new-password" : "current-password"}
@@ -153,42 +168,44 @@ export function AuthPanel({ onSignIn }: { onSignIn: (tokens: Model<"TokenPair">)
                     <Icon name={showPassword ? "eyeOff" : "eye"} size={18} />
                   </button>
                 </div>
-                {newPassword && <small id="auth-password-hint" className="text-subtle">Use at least 15 characters.</small>}
+                {newPassword && <small id="auth-password-hint" className="au-hint">Use at least 15 characters.</small>}
               </div>
             )}
             {(mode === "register" || mode === "google") && (
-              <label className="auth-consent">
+              <label className="au-consent">
                 <input type="checkbox" required />
                 <span>I accept the <a href="/legal/terms/" target="_blank" rel="noreferrer">terms</a> ({registrationPolicies.terms_version}) and <a href="/legal/privacy/" target="_blank" rel="noreferrer">privacy policy</a> ({registrationPolicies.privacy_policy_version}) for this API environment.</span>
               </label>
             )}
             {mode === "google" && !googleAvailableHere && (
-              <p className="text-sm text-subtle">Google sign-in uses the local web app at 127.0.0.1.</p>
+              <p className="au-hint">Google sign-in uses the local web app at 127.0.0.1.</p>
             )}
-            <button className={mode === "google" ? "google-button" : "action auth-submit w-full"} disabled={task.busy || (mode === "google" && !googleAvailableHere)}>
+            <button className={mode === "google" ? "au-google" : "au-submit"} data-busy={task.busy || undefined}
+              disabled={task.busy || (mode === "google" && !googleAvailableHere)}>
               {mode === "google" && <img src="/google-g.png" width="20" height="20" alt="" />}
-              {task.busy ? "Working…" : view.button}
+              {task.busy ? <><span className="au-spinner" aria-hidden="true" /> Working…</> : view.button}
               {mode !== "google" && !task.busy && <Icon name="arrow" size={18} />}
             </button>
             {mode === "login" && (
-              <details className="auth-advanced">
+              <details className="au-advanced">
                 <summary>Connecting an existing installation?</summary>
-                <label className="field mt-2">Installation ID
+                <label className="au-field">Installation ID
                   <input name="installation_id" autoComplete="off" maxLength={36} placeholder="Enter your installation ID" />
                 </label>
               </details>
             )}
           </form>
-          <div className="auth-help">
+          <p className="au-help">
             {mode === "login" && (
               <>
-                <p>New to Moby? <a href="/app/?view=register">Create an account</a></p>
-                <p><a href="/app/?view=verify">Verify your email</a></p>
+                <span>New to Moby? <a href="/app/?view=register">Create an account</a></span>
+                <span>Have an email link? <a href="/app/?view=verify">Verify your email</a></span>
               </>
             )}
-            {mode === "register" && <p>Already have a verification link? <a href="/app/?view=verify">Verify your email</a></p>}
-            {mode === "forgot" && <p>Already have a reset link? <a href="/app/?view=reset">Choose a new password</a></p>}
-          </div>
+            {mode === "register" && <span>Already have a verification link? <a href="/app/?view=verify">Verify your email</a></span>}
+            {mode === "verify" && <span>No account yet? <a href="/app/?view=register">Create one</a></span>}
+            {mode === "forgot" && <span>Already have a reset link? <a href="/app/?view=reset">Choose a new password</a></span>}
+          </p>
         </div>
       </div>
     </section>

@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #f3f8f9;
+  --color-ink: #fafafa;
   --color-panel: #fff;
-  --color-line: #d8e5e8;
-  --color-text: #101f25;
-  --color-subtle: #49626b;
-  --color-accent: #006c79;
-  --color-brand: #00a0af;
-  --color-field: #698f98;
-  --color-night: #081c24;
+  --color-line: #e4e4e7;
+  --color-text: #18181b;
+  --color-subtle: #52525b;
+  --color-accent: #18181b;
+  --color-brand: #18181b;
+  --color-field: #8a8a93;
+  --color-night: #000000;
 }
 
 body {
@@ -143,7 +143,7 @@ section[id] { scroll-margin-top: 1.25rem; }
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: radial-gradient(ellipse at 85% 50%, #00a0af13, transparent 60%);
+  background: radial-gradient(ellipse at 85% 50%, #18181b13, transparent 60%);
   content: "";
   pointer-events: none;
 }

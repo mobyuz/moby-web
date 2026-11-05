@@ -32,6 +32,11 @@ function Workspace() {
   const { language, script } = locales[localeKey];
   const locale = { language, script };
 
+  // Signed-out screens follow the system theme. The signed-in panel keeps its dark theme.
+  useEffect(() => {
+    document.documentElement.dataset.theme = session ? "mono" : "system";
+  }, [session]);
+
   useEffect(() => {
     const update = () => setShowStatus(window.location.hash === "#api-status");
     window.addEventListener("hashchange", update);
@@ -54,11 +59,11 @@ function Workspace() {
   return (
     <div className="site-layout">
       <a className="skip-link" href="#main">Skip to content</a>
-      <SiteHeader workspace>
-        {session && <button type="button" className="workspace-button" disabled={signOut.busy}
-          onClick={() => void signOut.run(() => session.signOut())}>{signOut.busy ? "Signing out…" : "Sign out"}</button>}
+      <SiteHeader>
+        {session ? <button type="button" className="workspace-button" disabled={signOut.busy}
+          onClick={() => void signOut.run(() => session.signOut())}>{signOut.busy ? "Signing out…" : "Sign out"}</button> : undefined}
       </SiteHeader>
-      <main id="main" tabIndex={-1} className={session ? "shell workspace-container" : "shell auth-container"}>
+      <main id="main" tabIndex={-1} className={session ? "shell workspace-container" : "au-main"}>
         <TaskFeedback feedback={signOut.feedback} />
         {session ? (
           <div className="workspace-layout">

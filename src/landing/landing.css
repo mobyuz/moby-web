@@ -4,31 +4,9 @@
  * The only colour is the face's mood, from @mobyuz/moby-ui (--moby-mood), plus the model
  * itself. Green and rose are for status only.
  */
-@import "@fontsource-variable/onest";
-@import "@fontsource-variable/jetbrains-mono";
 @import "@mobyuz/moby-ui/styles.css";
 @import "@mobyuz/moby-ui/mood.css";
 
-:root {
-  color-scheme: light dark;
-  --canvas: light-dark(#fafafa, #000000);
-  --panel: light-dark(#ffffff, #0b0b0b);
-  --raised: light-dark(#f4f4f5, #1c1c1f);
-  --line: light-dark(#e4e4e7, #2b2b2b);
-  --line-strong: light-dark(#8a8a93, #6e6e77);
-  --text: light-dark(#18181b, #fafafa);
-  --subtle: light-dark(#52525b, #a6a6a6);
-  --accent: light-dark(#18181b, #fafafa);
-  --accent-hover: light-dark(#3f3f46, #d4d4d8);
-  --on-accent: light-dark(#ffffff, #18181b);
-  --ok: light-dark(#047857, #34d399);
-  --danger: light-dark(#be123c, #fb7185);
-  --sans: "Onest Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Consolas, monospace;
-  --radius: 0.9rem;
-  --header: 4.25rem;
-  --moby-face-bezel: transparent;
-}
 
 *,
 *::before,
@@ -155,71 +133,6 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
 .button-small { min-height: 2.4rem; padding: 0.45rem 0.95rem; font-size: 0.92rem; }
 .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
 
-/* ---------- Header ---------- */
-
-.site-header {
-  position: fixed;
-  z-index: 30;
-  inset: 0 0 auto;
-  height: var(--header);
-  border-bottom: 1px solid transparent;
-  background: color-mix(in srgb, var(--canvas) 0%, transparent);
-  transition: background-color 0.2s, border-color 0.2s;
-}
-.site-header[data-scrolled] {
-  border-bottom-color: var(--line);
-  background: color-mix(in srgb, var(--canvas) 82%, transparent);
-  backdrop-filter: blur(14px) saturate(1.4);
-}
-.header-row { display: flex; height: 100%; align-items: center; justify-content: space-between; gap: 1.5rem; }
-.brand { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; font-weight: 750; letter-spacing: -0.05em; text-decoration: none; }
-.header-nav { display: flex; gap: 1.6rem; }
-.header-nav a { position: relative; padding-block: 0.35rem; color: var(--subtle); font-size: 0.93rem; font-weight: 500; text-decoration: none; transition: color 0.18s; }
-.header-nav a::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 1.5px;
-  background: var(--text);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.2s ease;
-}
-.header-nav a:hover, .header-nav a[data-active] { color: var(--text); }
-.header-nav a:hover::after, .header-nav a[data-active]::after { transform: scaleX(1); }
-.header-actions { display: flex; align-items: center; gap: 0.6rem; }
-.menu-button {
-  display: none;
-  width: 2.4rem;
-  height: 2.4rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--line-strong);
-  border-radius: 0.6rem;
-  background: transparent;
-  cursor: pointer;
-}
-
-@media (max-width: 62rem) {
-  .menu-button { display: inline-flex; }
-  .header-nav {
-    position: absolute;
-    top: var(--header);
-    inset-inline: 0;
-    display: none;
-    flex-direction: column;
-    gap: 0;
-    padding: 0.5rem 1.5rem 1rem;
-    border-bottom: 1px solid var(--line);
-    background: var(--canvas);
-  }
-  .header-nav[data-open] { display: flex; }
-  .header-nav a { padding: 0.8rem 0; border-top: 1px solid var(--line); font-size: 1rem; }
-  .header-nav a:first-child { border-top: 0; }
-}
-@media (max-width: 30rem) {
-  .header-actions .button-small { padding-inline: 0.7rem; }
-}
 
 /* ---------- Hero story ---------- */
 
@@ -576,35 +489,6 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
 .demo-offline > div { display: grid; gap: 0.6rem; justify-items: start; }
 .demo-offline p { color: var(--subtle); }
 @media (max-width: 56rem) { .demo-grid { grid-template-columns: 1fr; } }
-
-/* ---------- Footer ---------- */
-
-.site-footer { border-top: 1px solid var(--line); background: var(--panel); }
-.footer-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr); gap: clamp(2rem, 1rem + 5vw, 6rem); padding-block: 4rem 3.5rem; }
-.footer-intro { display: grid; align-content: start; gap: 1rem; }
-.footer-intro p { max-width: 26rem; color: var(--subtle); text-wrap: pretty; }
-.footer-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
-.footer-links > div { display: grid; align-content: start; gap: 0.7rem; }
-.footer-links h2 { margin-bottom: 0.4rem; font: 500 0.7rem/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--subtle); }
-.footer-links a {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--text);
-  font-size: 0.95rem;
-  text-decoration: none;
-  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
-  transition: background-size 0.2s ease;
-}
-.footer-links a:hover, .footer-links a:focus-visible { background-size: 100% 1px; }
-.site-footer [data-reveal] { transition-duration: 0.25s; }
-.footer-end { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding-block: 1.5rem 2.25rem; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--subtle); }
-.footer-end a { text-decoration: none; transition: color 0.18s; }
-.footer-end a:hover { color: var(--text); }
-@media (max-width: 52rem) {
-  .footer-grid { grid-template-columns: 1fr; gap: 2.25rem; padding-block: 3rem 2.5rem; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

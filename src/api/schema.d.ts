@@ -264,6 +264,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/demo/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["chat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/installations": {
         parameters: {
             query?: never;
@@ -477,6 +493,13 @@ export interface components {
             records: components["schemas"]["ConsentRecord"][];
         };
         DeleteAccount: components["schemas"]["PasswordDelete"] | components["schemas"]["Proof"];
+        DemoReply: {
+            reply: string;
+        };
+        DemoRequest: {
+            bot_token: string;
+            text: string;
+        };
         ErrorBody: {
             code: string;
             message: string;
@@ -1626,6 +1649,93 @@ export interface operations {
                 };
             };
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    chat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemoRequest"];
+            };
+        };
+        responses: {
+            /** @description Short guest reply */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoReply"];
+                };
+            };
+            /** @description Invalid text, token or JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Bot verification rejected */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Request exceeds 8 KiB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Guest IP rate limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Guest provider failed or returned invalid output */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Demo disabled, verification unavailable or guest budget exhausted */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Guest provider timed out */
+            504: {
                 headers: {
                     [name: string]: unknown;
                 };

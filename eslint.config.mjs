@@ -6,4 +6,5 @@ export default defineConfig(
   { ignores: ["dist/", ".npm-cache/", "playwright-report/", "test-results/", "src/api/schema.d.ts", "public/draco/"] },
   js.configs.recommended,
   tseslint.configs.recommended,
+  { files: ["scripts/**/*.mjs"], languageOptions: { globals: { console: "readonly", process: "readonly" } } },
 );

@@ -166,3 +166,92 @@ html { scroll-padding-top: calc(var(--header) + 1rem); }
 .mc-header :focus-visible, .mc-footer :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 0.25rem; }
 .mc-header, .mc-footer { font-family: var(--sans); font-size: 16px; line-height: 1.55; color: var(--text); }
 @media print { .mc-header, .mc-footer { display: none !important; } }
+
+/* ---------- Footer lift: closing band, face, wordmark, tools ---------- */
+html:not([data-theme="mono"])[data-scheme="light"] { color-scheme: light; }
+html:not([data-theme="mono"])[data-scheme="dark"] { color-scheme: dark; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+.mc-footer { position: relative; overflow: clip; isolation: isolate; border-top: 0; }
+.mc-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong) 30%, var(--line-strong) 70%, transparent);
+}
+.mc-footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(50% 45% at 50% 100%, color-mix(in oklab, var(--moby-mood, transparent) 16%, transparent), transparent 75%),
+    radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--text) 5%, transparent), transparent 75%);
+}
+
+.mc-closing { padding-block: clamp(3rem, 2rem + 4vw, 5.5rem) 0; }
+.mc-closing-inner {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: clamp(2rem, 1.2rem + 3vw, 3.5rem) 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--canvas) 70%, transparent);
+  text-align: center;
+}
+.mc-closing h2 { margin: 0; font-size: clamp(1.8rem, 1.1rem + 2.6vw, 3rem); font-weight: 680; letter-spacing: -0.04em; line-height: 1.05; text-wrap: balance; }
+.mc-closing p { margin: 0; color: var(--subtle); }
+.mc-closing-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 0.75rem; }
+.mc-button--ghost { border-style: dashed; color: var(--subtle); cursor: default; }
+.mc-button--ghost:hover { border-color: var(--line-strong); background: transparent; }
+
+.mc-face { margin-top: 0.5rem; width: fit-content; }
+.mc-face .moby-face { width: 6.5rem; height: auto; }
+.mc-face .moby-face__eyes { translate: var(--look-x, 0px) var(--look-y, 0px); transition: translate 0.18s ease-out; }
+.mc-footer-links a svg { transition: translate 0.2s ease; }
+.mc-footer-links a:hover svg, .mc-footer-links a:focus-visible svg { translate: 2px -2px; }
+
+.mc-footer-tools { display: flex; align-items: center; gap: 0.75rem; }
+.mc-icon-link, .mc-theme button { display: inline-grid; width: 2.75rem; height: 2.75rem; place-items: center; color: var(--subtle); transition: color 0.18s, background-color 0.18s; }
+.mc-icon-link:hover, .mc-theme button:hover { color: var(--text); }
+.mc-theme { display: inline-flex; padding: 0.15rem; border: 1px solid var(--line); border-radius: 999px; }
+.mc-theme button { width: 2.75rem; height: 2.4rem; border: 0; border-radius: 999px; background: none; cursor: pointer; }
+.mc-theme button[aria-pressed="true"] { background: var(--raised); color: var(--text); }
+.mc-top { display: inline-flex; min-height: 2.75rem; align-items: center; gap: 0.35rem; }
+.mc-top span { transition: translate 0.2s ease; }
+.mc-top:hover span { translate: 0 -3px; }
+.mc-footer-end { align-items: center; }
+
+/* The wordmark is a large, clipped signature that rises as the footer scrolls in. */
+.mc-wordmark {
+  height: clamp(4.2rem, 17vw, 15rem);
+  margin-top: 0.5rem;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.mc-wordmark span {
+  display: block;
+  font: 800 clamp(7rem, 30vw, 26rem)/0.8 var(--sans);
+  letter-spacing: -0.07em;
+  text-align: center;
+  white-space: nowrap;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--text) 16%, transparent), transparent 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  translate: 0 18%;
+  opacity: 0;
+  transition: translate 0.25s ease-out, opacity 0.25s ease-out;
+}
+.mc-footer:has([data-in]) .mc-wordmark span { translate: 0 0; opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .mc-wordmark span { translate: 0 0; opacity: 1; }
+  .mc-face .moby-face__eyes { transition: none; }
+}
+@media (max-width: 30rem) {
+  .mc-footer-end { flex-direction: column; align-items: flex-start; }
+  .mc-footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -3,8 +3,6 @@ import { Icon } from "../Icon";
 import { Reveal } from "../motion";
 import type { Expression } from "./story";
 
-const org = "https://github.com/mobyuz";
-
 function SectionHead({ eyebrow, title, id, children }: { eyebrow: string; title: string; id: string; children?: React.ReactNode }) {
   return (
     <Reveal className="section-head">
@@ -154,46 +152,6 @@ export function Languages() {
             </Reveal>
           ))}
         </ul>
-      </div>
-    </section>
-  );
-}
-
-export function Download() {
-  return (
-    <section id="download" className="band" aria-labelledby="download-heading">
-      <div className="shell split">
-        <Reveal className="split-lead">
-          <p className="eyebrow">Download</p>
-          <h2 id="download-heading" className="section-title">Windows app, not released yet.</h2>
-          <p className="section-intro">
-            Moby is in early development and there is no installer to download today. You can try the assistant in your browser now,
-            or build the Windows app from source.
-          </p>
-          <div className="cta-row">
-            <a className="button button-primary" href="/app/">Open Moby Web <Icon name="arrow" size={18} /></a>
-            <a className="button" href={`${org}/moby-desktop`}>Desktop app source <Icon name="external" size={16} /></a>
-          </div>
-        </Reveal>
-        <Reveal className="rows" delay={90}>
-          <div className="row">
-            <h3>Build your own</h3>
-            <p>The hardware is open too: Blender models, wiring and a parts list for the ESP32-S3 prototype.</p>
-            <p className="row-links">
-              <a href={`${org}/3d-model`}>3D models and wiring <Icon name="external" size={14} /></a>
-              <a href={`${org}/moby-firmware`}>Firmware <Icon name="external" size={14} /></a>
-            </p>
-          </div>
-          <div className="row">
-            <h3>Read the code</h3>
-            <p>Website, API, desktop app, firmware and protocol are developed in the open.</p>
-            <p className="row-links">
-              <a href={`${org}/moby-web`}>Website <Icon name="external" size={14} /></a>
-              <a href={`${org}/moby-api`}>API <Icon name="external" size={14} /></a>
-              <a href="/docs/">Documentation</a>
-            </p>
-          </div>
-        </Reveal>
       </div>
     </section>
   );

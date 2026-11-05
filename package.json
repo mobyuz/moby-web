@@ -12,13 +12,14 @@
   "packageManager": "npm@11.6.2",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
+    "build": "node scripts/check-release.mjs && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "api:generate": "openapi-typescript contracts/moby-api.openapi.json -o src/api/schema.d.ts",
     "api:check": "npm run api:generate -- --check",
-    "test": "playwright test"
+    "test": "playwright test",
+    "release:check": "node scripts/check-release.mjs"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "5.3.0",

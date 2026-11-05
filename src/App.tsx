@@ -1,7 +1,8 @@
 import { GuestDemo } from "./GuestDemo";
 import { SiteFooter, SiteHeader } from "./SiteChrome";
 import { HeroStory } from "./landing/HeroStory";
-import { Download, HowItWorks, Languages, Privacy, SpecStrip, Tools } from "./landing/Sections";
+import { Download } from "./landing/Download";
+import { HowItWorks, Languages, Privacy, SpecStrip, Tools } from "./landing/Sections";
 
 export function App() {
   return (

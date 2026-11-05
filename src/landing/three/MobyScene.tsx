@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, PerformanceMonitor, useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Box3, MathUtils, Mesh, NeutralToneMapping, Object3D, PerspectiveCamera, Raycaster, Vector3, type Material } from "three";
+import { Box3, MathUtils, Mesh, NeutralToneMapping, Object3D, PerspectiveCamera, Quaternion, Raycaster, Vector3, type Material } from "three";
 import { MODEL_URL, PART_LABELS, POSE, explodeAt, range, smooth, storyProgress } from "../story";
 
 useGLTF.setDecoderPath("/draco/");
@@ -23,6 +23,28 @@ type Part = {
   delay: number;
   box: Box3;
   meshes: Mesh[];
+  centre: Vector3;
+  /** Rotation axis and peak angle (radians) while the part travels. */
+  axis: Vector3;
+  tilt: number;
+  /** This part's own progress, 0 closed to 1 open, after its stagger and easing. */
+  pe: number;
+  arrived: number;
+};
+
+/** Outer shell first on opening, inner board last. Closing plays the same timeline backwards. */
+const ORDER = [
+  "shell-front", "shell-rear", "foot-left", "foot-right", "sole-left", "sole-right", "usb-guide", "controls",
+  "speaker", "microphone", "screen-face", "screen", "servo", "uprights", "amplifier", "carrier", "board",
+];
+const STAGGER = 0.4;
+const WINDOW = 0.6;
+
+/** Ease out with a small overshoot, so a part settles into place. */
+const easeOutBack = (t: number) => {
+  const c1 = 0.9;
+  const c3 = c1 + 1;
+  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
 };
 
 const deg = MathUtils.degToRad;
@@ -42,12 +64,19 @@ function readParts(root: Object3D): Part[] {
     if (!explode) continue;
     const meshes: Mesh[] = [];
     object.traverse((child) => { if ((child as Mesh).isMesh) meshes.push(child as Mesh); });
+    const offset = new Vector3(explode[0], explode[1], explode[2]);
+    const box = new Box3().setFromObject(object);
+    const rank = Math.max(0, ORDER.indexOf(object.name));
+    const axis = new Vector3().crossVectors(offset, new Vector3(0, 1, 0));
+    if (axis.lengthSq() < 1e-10) axis.set(1, 0, 0);
     parts.push({
-      object,
-      offset: new Vector3(explode[0], explode[1], explode[2]),
-      delay: parts.length * 0.02,
-      box: new Box3().setFromObject(object),
-      meshes,
+      object, offset, box, meshes,
+      delay: (rank / (ORDER.length - 1)) * STAGGER,
+      centre: box.getCenter(new Vector3()),
+      axis: axis.normalize(),
+      tilt: (rank % 2 ? 1 : -1) * deg(5 + (rank % 4) * 1.5),
+      pe: 0,
+      arrived: 0,
     });
   }
   return parts;
@@ -116,6 +145,8 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
   const home = useRef({ x: 0, y: 0, h: 1 });
   const ready = useRef(false);
   const frames = useRef(0);
+  const smoothed = useRef(0);
+  const awake = useRef(false);
   const lastAlpha = useRef(0);
   const copyRight = useRef(0);
   const tagSizes = useRef(new Map<string, { w: number; h: number }>());
@@ -123,7 +154,7 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
   const labels = useRef(new Map<string, HTMLElement>());
   const raycaster = useMemo(() => new Raycaster(), []);
   const tmp = useMemo(() => ({
-    v: new Vector3(), target: new Vector3(), c0: new Vector3(), c1: new Vector3(), box: new Box3(),
+    pivot: new Vector3(), q: new Quaternion(), v: new Vector3(), target: new Vector3(), c0: new Vector3(), c1: new Vector3(), box: new Box3(),
   }), []);
 
   useEffect(() => {
@@ -157,12 +188,23 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
 
   useFrame((_state, delta) => {
     clock.current += Math.min(delta, 0.05);
-    const open = explodeAt(storyProgress.value);
 
-    // Parts slide to their exploded poses, slightly staggered.
+    // Scroll progress is damped, so scrolling up and down are equally smooth and a change of direction never jumps.
+    const target = storyProgress.value;
+    if (delta > 0.25 || !awake.current) smoothed.current = target;   // resuming after a pause: snap, do not replay
+    else smoothed.current += (target - smoothed.current) * (1 - Math.exp(-Math.min(delta, 0.1) * 7));
+    awake.current = true;
+    const settling = Math.abs(target - smoothed.current) > 0.0004;
+    if (!settling) smoothed.current = target;
+    const open = explodeAt(smoothed.current);
+
+    // Each part runs its own eased timeline with a little rotation that is zero at both ends.
     for (const part of model.parts) {
-      const own = smooth(range(open, part.delay, part.delay + 0.6));
-      part.object.position.copy(part.offset).multiplyScalar(own);
+      const t = range(open, part.delay, part.delay + WINDOW);
+      part.pe = easeOutBack(t);
+      part.arrived = smooth(range(t, 0.8, 1));
+      part.object.quaternion.setFromAxisAngle(part.axis, Math.sin(Math.PI * t) * part.tilt);
+      part.object.position.copy(part.offset).multiplyScalar(part.pe).add(part.centre).sub(tmp.pivot.copy(part.centre).applyQuaternion(part.object.quaternion));
     }
     scene.updateMatrixWorld(true);
 
@@ -185,9 +227,10 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
     camera.updateProjectionMatrix();
 
     // Slow sway while closed, a wider and higher view while open.
-    const azimuth = deg(POSE.azimuth) + Math.sin(clock.current * 0.3) * deg(50) * (1 - open) - open * deg(10);
-    const elevation = deg(POSE.elevation + open * 16);
-    const distance = MathUtils.lerp(closedDistance(model.assembled), openDistance(model.opened, half, region, size.height), open);
+    const swing = Math.sin(Math.PI * open);
+    const azimuth = deg(POSE.azimuth) + Math.sin(clock.current * 0.3) * deg(50) * (1 - open) - open * deg(10) + swing * deg(9);
+    const elevation = deg(POSE.elevation + open * 16 + swing * 4);
+    const distance = MathUtils.lerp(closedDistance(model.assembled), openDistance(model.opened, half, region, size.height), open) * (1 + swing * 0.05);
     model.assembled.getCenter(tmp.c0);
     model.opened.getCenter(tmp.c1);
     tmp.target.lerpVectors(tmp.c0, tmp.c1, open);
@@ -200,23 +243,23 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
     camera.updateMatrixWorld(true);
 
     // Part labels follow their parts.
-    const labelAlpha = smooth(range(open, 0.78, 1));
+    const labelAlpha = Math.max(...PART_LABELS.map((label) => model.byName.get(label.id)?.arrived ?? 0));
     if (labelAlpha > 0 || lastAlpha.current > 0) {
       // Place each tag by its preferred offset, keep it on screen and clear of the copy, then nudge overlaps apart.
       const minX = narrow ? 8 : Math.max(8, copyRight.current + 12);
-      const placed: { el: HTMLElement; ax: number; ay: number; x: number; y: number; w: number; h: number; line: SVGLineElement | null }[] = [];
+      const placed: { alpha: number; el: HTMLElement; ax: number; ay: number; x: number; y: number; w: number; h: number; line: SVGLineElement | null }[] = [];
       for (const label of PART_LABELS) {
         const el = labels.current.get(label.id);
         const part = model.byName.get(label.id);
         const tag = tagSizes.current.get(label.id);
         if (!el || !part || !tag) continue;
-        part.box.getCenter(tmp.v).add(part.object.position);
+        tmp.v.copy(part.centre).addScaledVector(part.offset, part.pe);
         tmp.v.project(camera);
         const ax = (tmp.v.x * 0.5 + 0.5) * size.width;
         const ay = (-tmp.v.y * 0.5 + 0.5) * size.height;
         const x = Math.min(Math.max(label.dx < 0 ? ax + label.dx - tag.w : ax + label.dx, minX), size.width - 8 - tag.w);
-        const y = Math.min(Math.max(ay + label.dy - tag.h / 2, 76), size.height - 40 - tag.h);
-        placed.push({ el, ax, ay, x, y, w: tag.w, h: tag.h, line: el.querySelector("line") });
+        const y = Math.min(Math.max(ay + label.dy - tag.h / 2, narrow ? size.height * 0.3 : 76), size.height - 40 - tag.h);
+        placed.push({ alpha: part.arrived, el, ax, ay, x, y, w: tag.w, h: tag.h, line: el.querySelector("line") });
       }
       placed.sort((a, b) => a.y - b.y);
       placed.forEach((tag, index) => {
@@ -228,7 +271,8 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
       });
       for (const tag of placed) {
         tag.el.style.transform = `translate3d(${tag.ax.toFixed(1)}px,${tag.ay.toFixed(1)}px,0)`;
-        tag.el.style.opacity = labelAlpha.toFixed(2);
+        tag.el.style.opacity = tag.alpha.toFixed(2);
+        tag.el.style.setProperty("--slide", `${((1 - tag.alpha) * 14).toFixed(1)}px`);
         tag.el.style.setProperty("--tx", `${(tag.x - tag.ax).toFixed(1)}px`);
         tag.el.style.setProperty("--ty", `${(tag.y - tag.ay).toFixed(1)}px`);
         // The leader runs to the nearest point on the tag.
@@ -281,7 +325,7 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
       onReady();
     }
     // About 30 fps while closed, full rate while the page scrolls.
-    if (performance.now() - storyProgress.changedAt < 400) invalidate();
+    if (settling || performance.now() - storyProgress.changedAt < 400) invalidate();
     else if (!timer.current) timer.current = window.setTimeout(() => { timer.current = 0; invalidate(); }, 33);
   });
 

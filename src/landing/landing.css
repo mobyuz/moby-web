@@ -312,7 +312,7 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
   font-size: 0.78rem;
   line-height: 1.35;
   color: var(--subtle);
-  translate: var(--tx, 0px) var(--ty, 0px);
+  translate: var(--tx, 0px) calc(var(--ty, 0px) + var(--slide, 0px));
 }
 .part-tag strong {
   display: block;
@@ -537,3 +537,6 @@ h3 { font-size: 1.15rem; font-weight: 640; letter-spacing: -0.015em; line-height
 .build-own a { color: var(--text); text-underline-offset: 0.2em; }
 .button-primary:disabled { opacity: 0.6; }
 @media (max-width: 56rem) { .download { grid-template-columns: 1fr; } }
+@media (max-width: 56rem) {
+  .copy-inside .lead { display: none; }
+}

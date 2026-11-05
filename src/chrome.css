@@ -207,8 +207,16 @@ html:not([data-theme="mono"])[data-scheme="dark"] { color-scheme: dark; }
 .mc-button--ghost { border-style: dashed; color: var(--subtle); cursor: default; }
 .mc-button--ghost:hover { border-color: var(--line-strong); background: transparent; }
 
-.mc-face { margin-top: 0.5rem; width: fit-content; }
-.mc-face .moby-face { width: 6.5rem; height: auto; }
+.mc-face {
+  --moby-face-bezel: #1a2427;
+  margin-top: 0.5rem;
+  padding: 0.7rem 0.8rem 0.55rem;
+  width: fit-content;
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, #66808a, #3c5159 70%);
+  box-shadow: inset 0 1px 0 #ffffff40, inset 0 -2px 0 #00000030, 0 14px 28px -16px color-mix(in srgb, var(--text) 60%, transparent);
+}
+.mc-face .moby-face { width: 6rem; height: auto; }
 .mc-face .moby-face__eyes { translate: var(--look-x, 0px) var(--look-y, 0px); transition: translate 0.18s ease-out; }
 .mc-footer-links a svg { transition: translate 0.2s ease; }
 .mc-footer-links a:hover svg, .mc-footer-links a:focus-visible svg { translate: 2px -2px; }
@@ -224,25 +232,20 @@ html:not([data-theme="mono"])[data-scheme="dark"] { color-scheme: dark; }
 .mc-top:hover span { translate: 0 -3px; }
 .mc-footer-end { align-items: center; }
 
-/* The wordmark is a large, clipped signature that rises as the footer scrolls in. */
-.mc-wordmark {
-  height: clamp(4.2rem, 17vw, 15rem);
-  margin-top: 0.5rem;
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-}
+/* The wordmark is a large decorative signature that rises as the footer scrolls in. The whole word shows, descender included. */
+.mc-wordmark { margin-top: 0.5rem; overflow: hidden; pointer-events: none; user-select: none; }
 .mc-wordmark span {
   display: block;
-  font: 800 clamp(7rem, 30vw, 26rem)/0.8 var(--sans);
-  letter-spacing: -0.07em;
+  padding-bottom: 0.18em;
+  font: 800 clamp(5rem, 27vw, 22rem)/1 var(--sans);
+  letter-spacing: -0.06em;
   text-align: center;
   white-space: nowrap;
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--text) 16%, transparent), transparent 80%);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--text) 42%, transparent), color-mix(in srgb, var(--text) 9%, transparent) 95%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  translate: 0 18%;
+  translate: 0 14%;
   opacity: 0;
   transition: translate 0.25s ease-out, opacity 0.25s ease-out;
 }

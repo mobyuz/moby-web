@@ -3,7 +3,7 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist/", "playwright-report/", "test-results/", "src/api/schema.d.ts"] },
+  { ignores: ["dist/", ".npm-cache/", "playwright-report/", "test-results/", "src/api/schema.d.ts"] },
   js.configs.recommended,
   tseslint.configs.recommended,
 );

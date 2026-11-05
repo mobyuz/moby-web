@@ -11,20 +11,55 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          path: moby-web
+          persist-credentials: false
+      # @mobyuz/moby-ui is linked with file:../moby-ui and is not published yet, so build it from a
+      # pinned commit next to this checkout. It needs moby-protocol for its types, built from the
+      # same commit the desktop app pins. All Moby repositories are public, so no token is needed.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: mobyuz/moby-protocol
+          ref: 0ddc9a9befddb59082ec35e354512b3d72129fcf
+          path: moby-protocol
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: mobyuz/moby-ui
+          ref: 62de4e31ea598205dcc07bcbedb775ce0820a5ab
+          path: moby-ui
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: .node-version
+          node-version-file: moby-web/.node-version
           cache: npm
+          cache-dependency-path: moby-web/package-lock.json
       - run: npm install --global npm@11.6.2
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: npm run api:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run build
-      - run: npx --no-install playwright install --with-deps chromium
-      - run: npm test
+      - name: Build moby-protocol
+        working-directory: moby-protocol
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+      - name: Build moby-ui
+        working-directory: moby-ui
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+      - name: Install website dependencies
+        working-directory: moby-web
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Checks
+        working-directory: moby-web
+        run: |
+          npm run api:check
+          npm run lint
+          npm run typecheck
+          npm run build
+      - name: Browser tests
+        working-directory: moby-web
+        run: |
+          npx --no-install playwright install --with-deps chromium
+          npm test -- --workers=1

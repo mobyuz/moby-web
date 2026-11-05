@@ -78,7 +78,7 @@ test("a valid manifest shows the version, size, date, hash and SmartScreen note"
   await expect(download).toHaveAttribute("href", "/downloads/windows/Moby-Setup-0.1.0-x64.exe");
   await expect(section).toContainText("0.1.0");
   await expect(section).toContainText("46.0 MB");
-  await expect(section).toContainText("1 December 2026");
+  await expect(section).toContainText("December 1, 2026");
   await expect(section).toContainText("Windows 10 and 11, 64-bit");
   await expect(section).toContainText(String(fixture.sha256));
   await expect(section).toContainText("SmartScreen");

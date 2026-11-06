@@ -15,7 +15,6 @@
 body {
   background: var(--color-ink);
   color: var(--color-text);
-  color-scheme: light;
   font-family: system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

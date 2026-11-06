@@ -168,8 +168,8 @@ html { scroll-padding-top: calc(var(--header) + 1rem); }
 @media print { .mc-header, .mc-footer { display: none !important; } }
 
 /* ---------- Footer lift: closing band, face, wordmark, tools ---------- */
-html:not([data-theme="mono"])[data-scheme="light"] { color-scheme: light; }
-html:not([data-theme="mono"])[data-scheme="dark"] { color-scheme: dark; }
+html[data-scheme="light"] { color-scheme: light; }
+html[data-scheme="dark"] { color-scheme: dark; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 
 .mc-footer { position: relative; overflow: clip; isolation: isolate; border-top: 0; }

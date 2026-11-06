@@ -149,7 +149,6 @@ const schemeIcons: Record<Scheme, string> = {
 /** Light, dark or system. It controls the site theme on every page that follows the system setting. */
 function ThemeToggle() {
   const [scheme, setScheme] = useState<Scheme>(readScheme);
-  if (document.documentElement.dataset.theme === "mono") return null;
   const choose = (next: Scheme) => {
     setScheme(next);
     applyScheme(next);

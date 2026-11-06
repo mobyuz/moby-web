@@ -214,7 +214,7 @@
 }
 
 @media print {
-  .site-header, .site-footer, .doc-nav, .doc-toc, .read-progress, .doc-pager, .skip-link, .hero-aurora, .live-check, .doc-meta button { display: none !important; }
+  .doc-nav, .doc-toc, .read-progress, .doc-pager, .skip-link, .hero-aurora, .live-check, .doc-meta button { display: none !important; }
   html[data-theme="mono"] body, body { background: var(--lg-ffffff) !important; color: var(--lg-000000) !important; }
   .doc-layout { display: block; }
   .doc-article { max-width: none; }

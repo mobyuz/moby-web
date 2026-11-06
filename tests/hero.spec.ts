@@ -34,12 +34,19 @@ async function expectCanvasDrawn(page: Page) {
   expect(Math.abs(withModel.length - without.length)).toBeGreaterThan(without.length * 0.05);
 }
 
+/** Scrolls inside the page in one call, so a slow software-GL frame costs one round trip, not one per step. */
 async function scrollStep(page: Page, to: number, steps: number, delay: number) {
-  const from = await page.evaluate(() => window.scrollY);
-  for (let i = 1; i <= steps; i += 1) {
-    await page.evaluate((y) => window.scrollTo(0, y), from + ((to - from) * i) / steps);
-    if (delay) await page.waitForTimeout(delay);
-  }
+  await page.evaluate(
+    async ({ to, steps, delay }) => {
+      const from = window.scrollY;
+      for (let i = 1; i <= steps; i += 1) {
+        // Instant, so the site's smooth scrolling doesn't stretch each step under a slow frame.
+        window.scrollTo({ top: from + ((to - from) * i) / steps, behavior: "instant" });
+        if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    },
+    { to, steps, delay },
+  );
 }
 
 test("the hero model is still there after scrolling down and back up, slowly and fast, several times", async ({ page }) => {

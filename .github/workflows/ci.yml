@@ -58,8 +58,19 @@ jobs:
           npm run lint
           npm run typecheck
           npm run build
+      # Against a production build (made by the Playwright config with the test Turnstile key):
+      # it is what ships, and it is much lighter than the dev server for the software-GL 3D tests.
       - name: Browser tests
         working-directory: moby-web
+        env:
+          MOBY_E2E_PREVIEW: "1"
         run: |
           npx --no-install playwright install --with-deps chromium
           npm test -- --workers=1
+      - name: Keep test results when browser tests fail
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-results
+          path: moby-web/test-results/
+          retention-days: 7

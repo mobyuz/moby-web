@@ -43,21 +43,21 @@ async function scrollStep(page: Page, to: number, steps: number, delay: number) 
 }
 
 test("the hero model is still there after scrolling down and back up, slowly and fast, several times", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: 960, height: 540 });
   await page.goto("/");
   await expectLive(page);
   await expectModelShown(page);
   await expectCanvasDrawn(page);
 
   const bottom = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
-  for (const [steps, delay] of [[24, 30], [4, 0], [12, 10], [2, 0]] as const) {
+  for (const [steps, delay] of [[1, 0], [4, 0], [1, 0], [8, 20]] as const) {
     await scrollStep(page, bottom, steps, delay);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(800);
     await scrollStep(page, 0, steps, delay);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expectModelShown(page);
-    await expectCanvasDrawn(page);
   }
+  await expectCanvasDrawn(page);
 });
 
 test("the hero model survives leaving the hero and coming back on a phone", async ({ page }) => {

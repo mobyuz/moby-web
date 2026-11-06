@@ -116,7 +116,7 @@ function quadMatrix(points: number[][], w: number, h: number) {
   return `matrix3d(${a / w},${d / w},0,${g / w},${b / h},${e / h},0,${k / h},0,0,1,0,${x0},${y0},0,1)`;
 }
 
-function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active" | "onLost" | "onRestored">) {
+function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" | "onRestored">) {
   const { scene } = useGLTF(MODEL_URL);
   const camera = useThree((state) => state.camera) as PerspectiveCamera;
   const size = useThree((state) => state.size);
@@ -159,6 +159,18 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active" | "onLos
   const tmp = useMemo(() => ({
     pivot: new Vector3(), q: new Quaternion(), v: new Vector3(), target: new Vector3(), c0: new Vector3(), c1: new Vector3(), box: new Box3(),
   }), []);
+
+  // The scene pauses while the hero is off screen. Switching the canvas back to on-demand does not draw a frame
+  // by itself, and invalidations made while it was paused are lost, so ask for a frame when it wakes up and
+  // keep a light watchdog while it is active. Without this the canvas came back empty after scrolling up.
+  useEffect(() => {
+    if (!active) return;
+    awake.current = false;
+    invalidate();
+    const kick = window.setTimeout(invalidate, 60);
+    const watchdog = window.setInterval(invalidate, 400);
+    return () => { window.clearTimeout(kick); window.clearInterval(watchdog); };
+  }, [active, invalidate]);
 
   useEffect(() => {
     const listener = () => invalidate();
@@ -376,7 +388,7 @@ export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady, on
       </Environment>
       <ambientLight intensity={0.9} />
       <directionalLight position={[1.5, 3, 2.5]} intensity={2.4} />
-      <Rig faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} onReady={onReady} />
+      <Rig faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} active={active} onReady={onReady} />
     </Canvas>
   );
 }

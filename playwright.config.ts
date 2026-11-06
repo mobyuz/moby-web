@@ -16,7 +16,8 @@ export default defineConfig({
       port: upstreamPort,
     },
     {
-      command: "npm run dev -- --port 4173 --strictPort",
+      // MOBY_E2E_PREVIEW=1 tests the production build instead of the dev server.
+      command: process.env.MOBY_E2E_PREVIEW ? "npm run preview -- --port 4173 --strictPort" : "npm run dev -- --port 4173 --strictPort",
       url: baseURL,
       env: {
         MOBY_API_ORIGIN: `http://127.0.0.1:${upstreamPort}`,

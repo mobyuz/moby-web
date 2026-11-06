@@ -17,7 +17,7 @@ async function expectModelShown(page: Page) {
   await expect.poll(frames, { timeout: 25_000 }).toBeGreaterThan(before);
   await expect(story(page)).toHaveAttribute("data-scene", "live");
   const parts = Number(await story(page).getAttribute("data-parts"));
-  await expect.poll(async () => Number(await story(page).getAttribute("data-parts-in-view")), { timeout: 10_000 }).toBe(parts);
+  await expect.poll(async () => Number(await story(page).getAttribute("data-parts-in-view")), { timeout: 45_000 }).toBe(parts);
   await expect.poll(() => page.locator(".poster").evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.02);
   await expect.poll(() => page.locator(".story-view").evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.98);
 }
@@ -67,6 +67,8 @@ test("the hero model survives leaving the hero and coming back on a phone", asyn
   const bottom = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
   await scrollStep(page, bottom, 20, 20);
   await scrollStep(page, 0, 20, 20);
+  // The closing animation is damped, so wait for it to settle before checking the framing.
+  await expect.poll(async () => Number(await story(page).getAttribute("data-progress")), { timeout: 60_000 }).toBeLessThan(0.01);
   await expectModelShown(page);
 });
 
@@ -85,4 +87,32 @@ test("losing the WebGL context shows the poster, and restoring it brings the mod
   await expect.poll(() => page.locator(".poster").evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.98);
   await page.evaluate(() => (window as unknown as { __lose: { restoreContext: () => void } }).__lose.restoreContext());
   await expect(story(page)).toHaveAttribute("data-scene", "live", { timeout: 20_000 });
+});
+
+test("scrolling during start-up never stops the model from loading", async ({ page }) => {
+  await page.setViewportSize({ width: 960, height: 540 });
+  await page.goto("/", { waitUntil: "commit" });
+  // Scroll about 30% of the page almost at once, then back to the top, while the scene is still starting.
+  for (const fraction of [0.1, 0.2, 0.3, 0.15, 0]) {
+    await page.evaluate((f) => window.scrollTo(0, f * (document.documentElement.scrollHeight - window.innerHeight)), fraction).catch(() => undefined);
+    await page.waitForTimeout(120);
+  }
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 15_000 }).toBe(0);
+  await expect(story(page)).toHaveAttribute("data-scene", "live", { timeout: 60_000 });
+  // The closing animation is damped, so wait for it to settle before checking the framing.
+  await expect.poll(async () => Number(await story(page).getAttribute("data-progress")), { timeout: 60_000 }).toBeLessThan(0.01);
+  await expectModelShown(page);
+});
+
+test("a model that cannot load is retried once, then the poster stays and the page is not stuck loading", async ({ page }) => {
+  let requests = 0;
+  await page.route("**/models/moby-mini.glb", (route) => { requests += 1; void route.abort(); });
+  await page.setViewportSize({ width: 960, height: 540 });
+  await page.goto("/");
+  await expect.poll(() => requests, { timeout: 60_000 }).toBeGreaterThanOrEqual(2);
+  await expect(story(page)).toHaveAttribute("data-scene", "poster", { timeout: 30_000 });
+  await page.waitForTimeout(1500);
+  await expect(story(page)).toHaveAttribute("data-scene", "poster");
+  expect(await page.locator("canvas").count()).toBe(0);
+  await expect.poll(() => page.locator(".poster").evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.99);
 });

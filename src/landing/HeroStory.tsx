@@ -4,7 +4,8 @@ import { Icon } from "../Icon";
 import { useLive3D } from "./hooks";
 import { PART_LABELS, POSTER_SIZE, POSTER_URL, clamp01, expressionAt, range, storyProgress, type Expression } from "./story";
 
-const MobyScene = lazy(() => import("./three/MobyScene"));
+const loadScene = () => import("./three/MobyScene");
+const MobyScene = lazy(loadScene);
 
 class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
   override state = { failed: false };
@@ -39,6 +40,7 @@ export function HeroStory() {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [lost, setLost] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [onScreen, setOnScreen] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
   const [expression, setExpression] = useState<Expression>("idle");
@@ -47,6 +49,15 @@ export function HeroStory() {
   const labelsEl = useRef<HTMLDivElement>(null);
   const boxEl = useRef<HTMLElement>(null);
   const story = live && !failed;
+
+  function giveUp() {
+    if (attempt < 1) {
+      void loadScene().then((scene) => scene.resetModel());
+      setAttempt(attempt + 1);
+    } else {
+      setFailed(true);
+    }
+  }
 
   // Load the 3D chunk only after the poster has painted.
   useEffect(() => {
@@ -59,6 +70,13 @@ export function HeroStory() {
     const id = window.setTimeout(start, 400);
     return () => window.clearTimeout(id);
   }, [story]);
+
+  // A load that fails or takes far too long is retried once, then the poster stays.
+  useEffect(() => {
+    if (!mount || ready || failed) return;
+    const id = window.setTimeout(giveUp, 45_000);
+    return () => window.clearTimeout(id);
+  }, [mount, ready, failed, attempt]);
 
   // Scroll progress through the tall section drives the scene and the copy.
   useEffect(() => {
@@ -112,7 +130,7 @@ export function HeroStory() {
         {story && (
           <div className="story-view">
             {mount && (
-              <SceneBoundary onError={() => setFailed(true)}>
+              <SceneBoundary key={attempt} onError={giveUp}>
                 <Suspense fallback={null}>
                   <MobyScene faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} active={onScreen && tabVisible} onReady={() => setReady(true)}
                     onLost={() => setLost(true)} onRestored={() => setLost(false)} />

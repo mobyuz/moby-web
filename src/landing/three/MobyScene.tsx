@@ -5,6 +5,13 @@ import { Box3, MathUtils, Mesh, NeutralToneMapping, Object3D, PerspectiveCamera,
 import { MODEL_URL, PART_LABELS, POSE, explodeAt, range, smooth, storyProgress } from "../story";
 
 useGLTF.setDecoderPath("/draco/");
+// Start fetching the model as soon as this chunk runs, independent of the canvas, the scroll position or the frame loop.
+useGLTF.preload(MODEL_URL);
+
+/** Forget a failed load so the next attempt fetches again. */
+export function resetModel() {
+  useGLTF.clear(MODEL_URL);
+}
 
 type Props = {
   /** The DOM element that shows the real MobyFace. This scene pins it to the model's screen. */
@@ -120,7 +127,7 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
   const { scene } = useGLTF(MODEL_URL);
   const camera = useThree((state) => state.camera) as PerspectiveCamera;
   const size = useThree((state) => state.size);
-  const invalidate = useThree((state) => state.invalidate);
+  const advance = useThree((state) => state.advance);
   const gl = useThree((state) => state.gl);
 
   const model = useMemo(() => {
@@ -153,30 +160,31 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
   const lastAlpha = useRef(0);
   const copyRight = useRef(0);
   const tagSizes = useRef(new Map<string, { w: number; h: number }>());
-  const timer = useRef(0);
+  const settlingRef = useRef(false);
   const labels = useRef(new Map<string, HTMLElement>());
   const raycaster = useMemo(() => new Raycaster(), []);
   const tmp = useMemo(() => ({
     pivot: new Vector3(), q: new Quaternion(), v: new Vector3(), target: new Vector3(), c0: new Vector3(), c1: new Vector3(), box: new Box3(),
   }), []);
 
-  // The scene pauses while the hero is off screen. Switching the canvas back to on-demand does not draw a frame
-  // by itself, and invalidations made while it was paused are lost, so ask for a frame when it wakes up and
-  // keep a light watchdog while it is active. Without this the canvas came back empty after scrolling up.
+  // The canvas never runs R3F's own loop (frameloop "never"). This component draws frames itself while the hero is
+  // on screen: about 30 fps while idle and every frame while the page scrolls or the progress is still settling.
+  // Owning the loop means there is no paused state to get stuck in when the hero leaves the view and comes back.
   useEffect(() => {
     if (!active) return;
     awake.current = false;
-    invalidate();
-    const kick = window.setTimeout(invalidate, 60);
-    const watchdog = window.setInterval(invalidate, 400);
-    return () => { window.clearTimeout(kick); window.clearInterval(watchdog); };
-  }, [active, invalidate]);
-
-  useEffect(() => {
-    const listener = () => invalidate();
-    storyProgress.listeners.add(listener);
-    return () => { storyProgress.listeners.delete(listener); window.clearTimeout(timer.current); timer.current = 0; };
-  }, [invalidate]);
+    let raf = 0;
+    let last = 0;
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (settlingRef.current || now - storyProgress.changedAt < 400 || now - last >= 32) {
+        last = now;
+        advance(now);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, advance]);
 
   // Where the poster frame sits inside the canvas.
   useEffect(() => {
@@ -184,8 +192,7 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
     const view = gl.domElement.getBoundingClientRect();
     if (!frame) return;
     home.current = { x: frame.left - view.left + frame.width / 2, y: frame.top - view.top + frame.height / 2, h: Math.max(1, frame.height) };
-    invalidate();
-  }, [boxEl, gl, invalidate, size.width, size.height]);
+  }, [boxEl, gl, size.width, size.height]);
 
   useEffect(() => {
     labels.current = new Map(
@@ -210,6 +217,7 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
     else smoothed.current += (target - smoothed.current) * (1 - Math.exp(-Math.min(delta, 0.1) * 7));
     awake.current = true;
     const settling = Math.abs(target - smoothed.current) > 0.0004;
+    settlingRef.current = settling;
     if (!settling) smoothed.current = target;
     const open = explodeAt(smoothed.current);
 
@@ -348,15 +356,15 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
         root.dataset.frames = String(frames.current);
         root.dataset.partsInView = String(inView);
         root.dataset.parts = String(model.parts.length);
+        root.dataset.progress = smoothed.current.toFixed(3);
+        root.dataset.home = `${home.current.x.toFixed(0)},${home.current.y.toFixed(0)},${home.current.h.toFixed(0)}`;
+        root.dataset.camera = camera.position.toArray().map((n) => n.toFixed(3)).join(",");
       }
     }
     if (!ready.current && frames.current > 4) {
       ready.current = true;
       onReady();
     }
-    // About 30 fps while closed, full rate while the page scrolls.
-    if (settling || performance.now() - storyProgress.changedAt < 400) invalidate();
-    else if (!timer.current) timer.current = window.setTimeout(() => { timer.current = 0; invalidate(); }, 33);
   });
 
   return <primitive object={scene} />;
@@ -366,7 +374,7 @@ export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady, on
   const [dpr, setDpr] = useState<[number, number]>([1, 1.5]);
   return (
     <Canvas
-      frameloop={active ? "demand" : "never"}
+      frameloop="never"
       dpr={dpr}
       camera={{ fov: POSE.fov, near: 0.02, far: 4 }}
       gl={{ alpha: true, antialias: true, powerPreference: "default" }}

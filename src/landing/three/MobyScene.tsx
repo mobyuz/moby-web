@@ -15,6 +15,9 @@ type Props = {
   boxEl: RefObject<HTMLElement | null>;
   active: boolean;
   onReady: () => void;
+  /** The GPU dropped the WebGL context. The page falls back to the poster until it is restored. */
+  onLost: () => void;
+  onRestored: () => void;
 };
 
 type Part = {
@@ -113,7 +116,7 @@ function quadMatrix(points: number[][], w: number, h: number) {
   return `matrix3d(${a / w},${d / w},0,${g / w},${b / h},${e / h},0,${k / h},0,0,1,0,${x0},${y0},0,1)`;
 }
 
-function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
+function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active" | "onLost" | "onRestored">) {
   const { scene } = useGLTF(MODEL_URL);
   const camera = useThree((state) => state.camera) as PerspectiveCamera;
   const size = useThree((state) => state.size);
@@ -320,6 +323,20 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
 
     // Reveal the scene after a few frames, once the shaders have compiled, so it never flashes empty.
     frames.current += 1;
+    // Test hooks: how many frames were drawn and how many parts are inside the camera view.
+    if (frames.current % 5 === 0) {
+      const root = faceEl.current?.closest<HTMLElement>(".story");
+      if (root) {
+        let inView = 0;
+        for (const part of model.parts) {
+          tmp.v.copy(part.centre).addScaledVector(part.offset, part.pe).project(camera);
+          if (Number.isFinite(tmp.v.x + tmp.v.y + tmp.v.z) && Math.abs(tmp.v.x) <= 1 && Math.abs(tmp.v.y) <= 1) inView += 1;
+        }
+        root.dataset.frames = String(frames.current);
+        root.dataset.partsInView = String(inView);
+        root.dataset.parts = String(model.parts.length);
+      }
+    }
     if (!ready.current && frames.current > 4) {
       ready.current = true;
       onReady();
@@ -332,7 +349,7 @@ function Rig({ faceEl, labelsEl, boxEl, onReady }: Omit<Props, "active">) {
   return <primitive object={scene} />;
 }
 
-export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady }: Props) {
+export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady, onLost, onRestored }: Props) {
   const [dpr, setDpr] = useState<[number, number]>([1, 1.5]);
   return (
     <Canvas
@@ -344,6 +361,9 @@ export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady }: 
         gl.toneMapping = NeutralToneMapping;
         gl.toneMappingExposure = 1.35;
         gl.setClearColor(0x000000, 0);
+        const canvas = gl.domElement;
+        canvas.addEventListener("webglcontextlost", (event) => { event.preventDefault(); onLost(); });
+        canvas.addEventListener("webglcontextrestored", () => onRestored());
       }}
       aria-hidden="true"
     >

@@ -38,6 +38,7 @@ export function HeroStory() {
   const [mount, setMount] = useState(false);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [lost, setLost] = useState(false);
   const [onScreen, setOnScreen] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
   const [expression, setExpression] = useState<Expression>("idle");
@@ -103,7 +104,8 @@ export function HeroStory() {
   }, []);
 
   return (
-    <section ref={section} id="top-story" className="story" data-story={story || undefined} data-ready={ready || undefined}
+    <section ref={section} id="top-story" className="story" data-story={story || undefined} data-ready={(ready && !lost) || undefined}
+      data-scene={!story ? "poster" : lost ? "lost" : ready ? "live" : mount ? "loading" : "poster"}
       data-expression={expression} aria-labelledby="hero-heading">
       <div className="story-stage">
         <div className="story-glow" aria-hidden="true" />
@@ -112,7 +114,8 @@ export function HeroStory() {
             {mount && (
               <SceneBoundary onError={() => setFailed(true)}>
                 <Suspense fallback={null}>
-                  <MobyScene faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} active={onScreen && tabVisible} onReady={() => setReady(true)} />
+                  <MobyScene faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} active={onScreen && tabVisible} onReady={() => setReady(true)}
+                    onLost={() => setLost(true)} onRestored={() => setLost(false)} />
                 </Suspense>
               </SceneBoundary>
             )}

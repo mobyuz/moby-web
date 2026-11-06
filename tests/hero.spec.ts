@@ -22,16 +22,45 @@ async function expectModelShown(page: Page) {
   await expect.poll(() => page.locator(".story-view").evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.98);
 }
 
-/** Pixels: the stage region differs from the same region with the 3D layer hidden, so the canvas really drew something. */
+/**
+ * Pixels: read the WebGL buffer in an animation frame that runs right after the scene draws. The
+ * middle of the model frame must be largely covered, and an empty corner of the canvas must stay
+ * transparent, so the check can't pass on a blank or opaque canvas. Page screenshots stall on the
+ * Linux CI runner while software GL keeps rendering, so this reads the buffer instead.
+ */
 async function expectCanvasDrawn(page: Page) {
-  const box = await page.locator(".story-model").boundingBox();
-  if (!box) throw new Error("no hero frame");
-  const clip = { x: box.x + box.width * 0.2, y: box.y + box.height * 0.2, width: box.width * 0.6, height: box.height * 0.6 };
-  const withModel = await page.screenshot({ clip });
-  await page.addStyleTag({ content: ".story-view{visibility:hidden !important}" });
-  const without = await page.screenshot({ clip });
-  await page.evaluate(() => document.querySelectorAll("style").forEach((el) => { if (el.textContent?.includes("visibility:hidden !important")) el.remove(); }));
-  expect(Math.abs(withModel.length - without.length)).toBeGreaterThan(without.length * 0.05);
+  const coverage = await page.evaluate(
+    () =>
+      new Promise<{ model: number; corner: number }>((resolve, reject) => {
+        requestAnimationFrame(() => {
+          const canvas = document.querySelector<HTMLCanvasElement>(".story-view canvas");
+          const frame = document.querySelector(".story-model")?.getBoundingClientRect();
+          const gl = canvas?.getContext("webgl2") ?? canvas?.getContext("webgl");
+          if (!canvas || !frame || !gl) return reject(new Error("no hero canvas"));
+          const rect = canvas.getBoundingClientRect();
+          const sx = gl.drawingBufferWidth / rect.width;
+          const sy = gl.drawingBufferHeight / rect.height;
+          // Share of non-transparent pixels in a CSS-pixel rectangle; WebGL counts rows from the bottom.
+          const solid = (left: number, top: number, width: number, height: number) => {
+            const w = Math.max(1, Math.round(width * sx));
+            const h = Math.max(1, Math.round(height * sy));
+            const x = Math.round((left - rect.left) * sx);
+            const y = gl.drawingBufferHeight - Math.round((top - rect.top) * sy) - h;
+            const pixels = new Uint8Array(w * h * 4);
+            gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            let count = 0;
+            for (let i = 3; i < pixels.length; i += 4) if ((pixels[i] ?? 0) > 0) count += 1;
+            return count / (w * h);
+          };
+          resolve({
+            model: solid(frame.left + frame.width * 0.2, frame.top + frame.height * 0.2, frame.width * 0.6, frame.height * 0.6),
+            corner: solid(rect.left, rect.top, rect.width * 0.1, rect.height * 0.1),
+          });
+        });
+      }),
+  );
+  expect(coverage.model, `model frame coverage ${coverage.model}`).toBeGreaterThan(0.1);
+  expect(coverage.corner, `empty corner coverage ${coverage.corner}`).toBeLessThan(0.02);
 }
 
 /** Scrolls inside the page in one call, so a slow software-GL frame costs one round trip, not one per step. */

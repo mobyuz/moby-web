@@ -25,7 +25,6 @@
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource-variable/onest": "5.3.1",
     "@mobyuz/moby-ui": "file:../moby-ui",
-    "@react-three/drei": "10.7.9",
     "@react-three/fiber": "9.8.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",

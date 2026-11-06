@@ -1,16 +1,24 @@
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, PerformanceMonitor, useGLTF } from "@react-three/drei";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Box3, MathUtils, Mesh, NeutralToneMapping, Object3D, PerspectiveCamera, Quaternion, Raycaster, Vector3, type Material } from "three";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { Box3, MathUtils, Mesh, NeutralToneMapping, Object3D, PerspectiveCamera, PMREMGenerator, Quaternion, Raycaster, Vector3, type Material } from "three";
 import { MODEL_URL, PART_LABELS, POSE, explodeAt, range, smooth, storyProgress } from "../story";
 
-useGLTF.setDecoderPath("/draco/");
+/** GLTFLoader with the self-hosted Draco decoder: no request leaves this site. */
+const extend = (loader: GLTFLoader) => {
+  const draco = new DRACOLoader();
+  draco.setDecoderPath("/draco/");
+  loader.setDRACOLoader(draco);
+};
+
 // Start fetching the model as soon as this chunk runs, independent of the canvas, the scroll position or the frame loop.
-useGLTF.preload(MODEL_URL);
+useLoader.preload(GLTFLoader, MODEL_URL, extend);
 
 /** Forget a failed load so the next attempt fetches again. */
 export function resetModel() {
-  useGLTF.clear(MODEL_URL);
+  useLoader.clear(GLTFLoader, MODEL_URL);
 }
 
 type Props = {
@@ -124,7 +132,7 @@ function quadMatrix(points: number[][], w: number, h: number) {
 }
 
 function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" | "onRestored">) {
-  const { scene } = useGLTF(MODEL_URL);
+  const { scene } = useLoader(GLTFLoader, MODEL_URL, extend);
   const camera = useThree((state) => state.camera) as PerspectiveCamera;
   const size = useThree((state) => state.size);
   const advance = useThree((state) => state.advance);
@@ -157,6 +165,8 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
   const frames = useRef(0);
   const smoothed = useRef(0);
   const awake = useRef(false);
+  const slow = useRef(0);
+  const setDpr = useThree((state) => state.setDpr);
   const lastAlpha = useRef(0);
   const copyRight = useRef(0);
   const tagSizes = useRef(new Map<string, { w: number; h: number }>());
@@ -216,6 +226,9 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
     if (delta > 0.25 || !awake.current) smoothed.current = target;   // resuming after a pause: snap, do not replay
     else smoothed.current += (target - smoothed.current) * (1 - Math.exp(-Math.min(delta, 0.1) * 7));
     awake.current = true;
+    // On a slow device, drop to a pixel ratio of 1 after a run of slow frames.
+    slow.current = delta > 0.045 ? slow.current + 1 : Math.max(0, slow.current - 1);
+    if (slow.current > 25) { slow.current = 0; setDpr(1); }
     const settling = Math.abs(target - smoothed.current) > 0.0004;
     settlingRef.current = settling;
     if (!settling) smoothed.current = target;
@@ -370,12 +383,26 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
   return <primitive object={scene} />;
 }
 
+/** Soft studio light from three's own room environment, baked once. */
+function Studio() {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  useEffect(() => {
+    const generator = new PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const target = generator.fromScene(room, 0.04);
+    scene.environment = target.texture;
+    scene.environmentIntensity = 1.5;
+    return () => { scene.environment = null; target.dispose(); generator.dispose(); room.dispose(); };
+  }, [gl, scene]);
+  return null;
+}
+
 export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady, onLost, onRestored }: Props) {
-  const [dpr, setDpr] = useState<[number, number]>([1, 1.5]);
   return (
     <Canvas
       frameloop="never"
-      dpr={dpr}
+      dpr={[1, 1.5]}
       camera={{ fov: POSE.fov, near: 0.02, far: 4 }}
       gl={{ alpha: true, antialias: true, powerPreference: "default" }}
       onCreated={({ gl }) => {
@@ -388,15 +415,8 @@ export default function MobyScene({ faceEl, labelsEl, boxEl, active, onReady, on
       }}
       aria-hidden="true"
     >
-      <PerformanceMonitor onDecline={() => setDpr([1, 1])} />
-      <Environment resolution={128} frames={1}>
-        <Lightformer form="rect" intensity={5} position={[2.5, 2.5, 3]} scale={[5, 3, 1]} />
-        <Lightformer form="rect" intensity={3} position={[-3, 1, 1]} scale={[3, 4, 1]} />
-        <Lightformer form="rect" intensity={3} position={[0, 3, -3]} scale={[6, 2, 1]} />
-        <Lightformer form="ring" intensity={1.6} position={[0, -2, 2]} scale={4} />
-      </Environment>
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[1.5, 3, 2.5]} intensity={2.4} />
+      <Studio />
+      <directionalLight position={[1.5, 3, 2.5]} intensity={1.6} />
       <Rig faceEl={faceEl} labelsEl={labelsEl} boxEl={boxEl} active={active} onReady={onReady} />
     </Canvas>
   );

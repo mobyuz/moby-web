@@ -7,7 +7,20 @@ export default defineConfig(({ mode }) => {
   const { MOBY_API_ORIGIN } = loadEnv(mode, process.cwd(), "MOBY_API_");
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        // three's DRACOLoader names default decoder files that Vite would copy into the build. The site loads
+        // its own copy from /draco/, so these are never requested: leave them out of the output.
+        name: "drop-unused-draco-defaults",
+        generateBundle(_options, bundle) {
+          for (const key of Object.keys(bundle)) {
+            if (/^assets\/draco_(decoder|wasm_wrapper)-.*\.(js|wasm)$/.test(key)) delete bundle[key];
+          }
+        },
+      },
+    ],
     // @mobyuz/moby-ui is a sibling checkout linked with file:, so it has its own node_modules. Share one React.
     resolve: { dedupe: ["react", "react-dom", "three"] },
     build: {

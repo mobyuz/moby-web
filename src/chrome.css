@@ -1,0 +1,260 @@
+/*
+ * Shared chrome: design tokens, header and footer. Used by the landing page, sign-in,
+ * the web app, docs and legal pages. Tokens match the desktop app (moby-desktop/src/styles.css)
+ * and switch with light-dark(), so a page that forces color-scheme dark gets the dark set.
+ */
+@import "@fontsource-variable/onest";
+@import "@fontsource-variable/jetbrains-mono";
+@import "@mobyuz/moby-ui/styles.css";
+@import "@mobyuz/moby-ui/mood.css";
+
+:root {
+  color-scheme: light dark;
+  --canvas: light-dark(#fafafa, #000000);
+  --panel: light-dark(#ffffff, #0b0b0b);
+  --raised: light-dark(#f4f4f5, #1c1c1f);
+  --line: light-dark(#e4e4e7, #2b2b2b);
+  --line-strong: light-dark(#8a8a93, #6e6e77);
+  --text: light-dark(#18181b, #fafafa);
+  --subtle: light-dark(#52525b, #a6a6a6);
+  --accent: light-dark(#18181b, #fafafa);
+  --accent-hover: light-dark(#3f3f46, #d4d4d8);
+  --on-accent: light-dark(#ffffff, #18181b);
+  --ok: light-dark(#047857, #34d399);
+  --danger: light-dark(#be123c, #fb7185);
+  --sans: "Onest Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius: 0.9rem;
+  --header: 4.25rem;
+  --moby-face-bezel: transparent;
+}
+
+/* ---------- Buttons ---------- */
+
+.mc-button {
+  display: inline-flex;
+  min-height: 2.9rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.25rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.65rem;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+}
+.mc-button:hover { border-color: var(--text); background: var(--raised); }
+.mc-button:active { transform: translateY(1px); }
+.mc-button--primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.mc-button--primary:hover { border-color: var(--accent-hover); background: var(--accent-hover); }
+.mc-button:disabled { opacity: 0.45; cursor: default; }
+.mc-button:disabled:hover { background: transparent; border-color: var(--line-strong); }
+.mc-button--primary:disabled:hover { background: var(--accent); border-color: var(--accent); }
+.mc-button--small { min-height: 2.4rem; padding: 0.45rem 0.95rem; font-size: 0.92rem; }
+
+
+/* ---------- Header ---------- */
+
+.mc-header {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  height: var(--header);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--canvas) 90%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+/* Over the hero the header starts transparent and gains its background on scroll. */
+.mc-header--overlay {
+  position: fixed;
+  inset: 0 0 auto;
+  border-bottom-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+}
+.mc-header[data-scrolled] {
+  border-bottom-color: var(--line);
+  background: color-mix(in srgb, var(--canvas) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+.mc-row { display: flex; height: 100%; align-items: center; justify-content: space-between; gap: 1.5rem; }
+.mc-brand { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; font-weight: 750; letter-spacing: -0.05em; text-decoration: none; }
+.mc-nav { display: flex; gap: 1.6rem; }
+.mc-nav a { position: relative; padding-block: 0.35rem; color: var(--subtle); font-size: 0.93rem; font-weight: 500; text-decoration: none; transition: color 0.18s; }
+.mc-nav a::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1.5px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+.mc-nav a:hover, .mc-nav a[data-active] { color: var(--text); }
+.mc-nav a:hover::after, .mc-nav a[data-active]::after { transform: scaleX(1); }
+.mc-actions { display: flex; align-items: center; gap: 0.6rem; }
+.mc-menu {
+  display: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.6rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+@media (max-width: 62rem) {
+  .mc-menu { display: inline-flex; }
+  .mc-nav {
+    position: absolute;
+    top: var(--header);
+    inset-inline: 0;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--canvas);
+  }
+  .mc-nav[data-open] { display: flex; }
+  .mc-nav a { padding: 0.8rem 0; border-top: 1px solid var(--line); font-size: 1rem; }
+  .mc-nav a:first-child { border-top: 0; }
+}
+@media (max-width: 30rem) {
+  .mc-actions .mc-button--small { padding-inline: 0.7rem; }
+}
+
+/* ---------- Footer ---------- */
+
+.mc-footer { border-top: 1px solid var(--line); background: var(--panel); }
+.mc-footer-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr); gap: clamp(2rem, 1rem + 5vw, 6rem); padding-block: 4rem 3.5rem; }
+.mc-footer-intro { display: grid; align-content: start; gap: 1rem; }
+.mc-footer-intro p { max-width: 26rem; color: var(--subtle); text-wrap: pretty; }
+.mc-footer-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+.mc-footer-links > div { display: grid; align-content: start; gap: 0.7rem; }
+.mc-footer-links h2 { margin-bottom: 0.4rem; font: 500 0.7rem/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--subtle); }
+.mc-footer-links a {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition: background-size 0.2s ease;
+}
+.mc-footer-links a:hover, .mc-footer-links a:focus-visible { background-size: 100% 1px; }
+.mc-footer [data-reveal] { transition-duration: 0.25s; }
+.mc-footer-end { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding-block: 1.5rem 2.25rem; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--subtle); }
+.mc-footer-end a { text-decoration: none; transition: color 0.18s; }
+.mc-footer-end a:hover { color: var(--text); }
+@media (max-width: 52rem) {
+  .mc-footer-grid { grid-template-columns: 1fr; gap: 2.25rem; padding-block: 3rem 2.5rem; }
+}
+
+html { scroll-padding-top: calc(var(--header) + 1rem); }
+.mc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mc-header :focus-visible, .mc-footer :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 0.25rem; }
+.mc-header, .mc-footer { font-family: var(--sans); font-size: 16px; line-height: 1.55; color: var(--text); }
+@media print { .mc-header, .mc-footer { display: none !important; } }
+
+/* ---------- Footer lift: closing band, face, wordmark, tools ---------- */
+html[data-scheme="light"] { color-scheme: light; }
+html[data-scheme="dark"] { color-scheme: dark; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+.mc-footer { position: relative; overflow: clip; isolation: isolate; border-top: 0; }
+.mc-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong) 30%, var(--line-strong) 70%, transparent);
+}
+.mc-footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(50% 45% at 50% 100%, color-mix(in oklab, var(--moby-mood, transparent) 16%, transparent), transparent 75%),
+    radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--text) 5%, transparent), transparent 75%);
+}
+
+.mc-closing { padding-block: clamp(3rem, 2rem + 4vw, 5.5rem) 0; }
+.mc-closing-inner {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: clamp(2rem, 1.2rem + 3vw, 3.5rem) 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--canvas) 70%, transparent);
+  text-align: center;
+}
+.mc-closing h2 { margin: 0; font-size: clamp(1.8rem, 1.1rem + 2.6vw, 3rem); font-weight: 680; letter-spacing: -0.04em; line-height: 1.05; text-wrap: balance; }
+.mc-closing p { margin: 0; color: var(--subtle); }
+.mc-closing-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 0.75rem; }
+.mc-button--ghost { border-style: dashed; color: var(--subtle); cursor: default; }
+.mc-button--ghost:hover { border-color: var(--line-strong); background: transparent; }
+
+.mc-face {
+  --moby-face-bezel: #1a2427;
+  margin-top: 0.5rem;
+  padding: 0.7rem 0.8rem 0.55rem;
+  width: fit-content;
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, #66808a, #3c5159 70%);
+  box-shadow: inset 0 1px 0 #ffffff40, inset 0 -2px 0 #00000030, 0 14px 28px -16px color-mix(in srgb, var(--text) 60%, transparent);
+}
+.mc-face .moby-face { width: 6rem; height: auto; }
+.mc-face .moby-face__eyes { translate: var(--look-x, 0px) var(--look-y, 0px); transition: translate 0.18s ease-out; }
+.mc-footer-links a svg { transition: translate 0.2s ease; }
+.mc-footer-links a:hover svg, .mc-footer-links a:focus-visible svg { translate: 2px -2px; }
+
+.mc-footer-tools { display: flex; align-items: center; gap: 0.75rem; }
+.mc-icon-link, .mc-theme button { display: inline-grid; width: 2.75rem; height: 2.75rem; place-items: center; color: var(--subtle); transition: color 0.18s, background-color 0.18s; }
+.mc-icon-link:hover, .mc-theme button:hover { color: var(--text); }
+.mc-theme { display: inline-flex; padding: 0.15rem; border: 1px solid var(--line); border-radius: 999px; }
+.mc-theme button { width: 2.75rem; height: 2.4rem; border: 0; border-radius: 999px; background: none; cursor: pointer; }
+.mc-theme button[aria-pressed="true"] { background: var(--raised); color: var(--text); }
+.mc-top { display: inline-flex; min-height: 2.75rem; align-items: center; gap: 0.35rem; }
+.mc-top span { transition: translate 0.2s ease; }
+.mc-top:hover span { translate: 0 -3px; }
+.mc-footer-end { align-items: center; }
+
+/* The wordmark is a large decorative signature that rises as the footer scrolls in. The whole word shows, descender included. */
+.mc-wordmark { margin-top: 0.5rem; overflow: hidden; pointer-events: none; user-select: none; }
+.mc-wordmark span {
+  display: block;
+  padding-bottom: 0.18em;
+  font: 800 clamp(5rem, 27vw, 22rem)/1 var(--sans);
+  letter-spacing: -0.06em;
+  text-align: center;
+  white-space: nowrap;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--text) 42%, transparent), color-mix(in srgb, var(--text) 9%, transparent) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  translate: 0 14%;
+  opacity: 0;
+  transition: translate 0.25s ease-out, opacity 0.25s ease-out;
+}
+.mc-footer:has([data-in]) .mc-wordmark span { translate: 0 0; opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .mc-wordmark span { translate: 0 0; opacity: 1; }
+  .mc-face .moby-face__eyes { transition: none; }
+}
+@media (max-width: 30rem) {
+  .mc-footer-end { flex-direction: column; align-items: flex-start; }
+  .mc-footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -139,7 +139,7 @@ test("sign-in offers password visibility, a recovery screen, and the shared foot
   await expect(password).toHaveAttribute("type", "text");
   await page.getByRole("button", { name: "Hide password" }).click();
   await expect(password).toHaveAttribute("type", "password");
-  await expect(page.getByRole("contentinfo").getByRole("link", { name: "API status" })).toHaveAttribute("href", "/app/#api-status");
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/legal/privacy/");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
 
   await page.getByRole("link", { name: "Forgot password?" }).click();

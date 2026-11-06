@@ -1,0 +1,239 @@
+/*
+ * Sign-in, registration and password screens. Uses the shared tokens from chrome.css, so it follows
+ * the system light or dark setting. Only presentation lives here: the form behaviour is in AuthPanel.tsx.
+ */
+
+html:not([data-theme="mono"]) { color-scheme: light dark; }
+html:not([data-theme="mono"]) body { color-scheme: light dark; background: var(--canvas); color: var(--text); font-family: var(--sans); }
+
+.au-main {
+  display: grid;
+  min-height: calc(100svh - var(--header));
+  place-items: center;
+  padding: clamp(0.5rem, 2.2vh, 2.5rem) clamp(1rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(60% 50% at 20% 0%, color-mix(in oklab, var(--moby-mood, transparent) 10%, transparent), transparent 70%),
+    var(--canvas);
+}
+.au-main:focus { outline: none; }
+
+.au-card {
+  display: grid;
+  width: min(100%, 70rem);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--panel);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent), 0 24px 60px -30px color-mix(in srgb, var(--text) 28%, transparent);
+  animation: au-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ---------- Left: the real Moby ---------- */
+
+.au-aside {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: clamp(1.4rem, 1rem + 2vw, 2.5rem);
+  border-right: 1px solid var(--line);
+  background:
+    radial-gradient(70% 55% at 50% 62%, color-mix(in oklab, var(--moby-mood, transparent) 24%, transparent), transparent 75%),
+    var(--canvas);
+  transition: background 0.5s;
+}
+.au-eyebrow { font: 500 0.72rem/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--subtle); }
+.au-aside-title { font-size: clamp(1.7rem, 1.1rem + 1.7vw, 2.6rem); font-weight: 680; letter-spacing: -0.04em; line-height: 1.04; text-wrap: balance; }
+.au-aside-copy { max-width: 28rem; color: var(--subtle); text-wrap: pretty; }
+.au-figure { display: grid; flex: 1; min-height: 0; align-content: center; justify-items: center; gap: 0.6rem; margin: 0; }
+.au-figure img { width: 100%; max-height: clamp(9rem, 30vh, 19rem); object-fit: contain; }
+.au-figure figcaption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0.9rem 0.35rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font: 400 0.74rem/1.2 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+.au-figure figcaption strong { color: var(--text); font-weight: 600; margin-right: 0.35rem; }
+.au-figure .moby-face { width: 4.5rem; height: auto; }
+.au-points { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; color: var(--subtle); font-size: 0.92rem; }
+.au-points li { display: flex; align-items: center; gap: 0.6rem; }
+.au-points svg { color: var(--text); flex: none; }
+
+/* ---------- Right: the form ---------- */
+
+.au-panel { display: grid; min-width: 0; align-items: center; padding: clamp(1rem, 3.5vh, 2.75rem) clamp(1.4rem, 1rem + 2vw, 2.75rem); }
+.au-content { width: min(100%, 26rem); margin-inline: auto; animation: au-rise 0.45s 0.08s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.au-content h1 { font-size: clamp(1.7rem, 1.3rem + 1.2vw, 2.3rem); font-weight: 680; letter-spacing: -0.04em; line-height: 1.08; }
+.au-description { margin-top: 0.5rem; color: var(--subtle); text-wrap: pretty; }
+.au-back {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.4rem;
+  margin: -0.5rem 0 0.5rem -0.25rem;
+  padding-inline: 0.25rem;
+  color: var(--subtle);
+  font-size: 0.92rem;
+  font-weight: 560;
+  text-decoration: none;
+  transition: color 0.15s, transform 0.15s;
+}
+.au-back:hover { color: var(--text); transform: translateX(-2px); }
+
+.au-feedback { margin-top: 1rem; }
+.au-feedback:empty { margin: 0; }
+.au-feedback .feedback {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.6rem;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 0.92rem;
+  animation: au-rise 0.25s ease both;
+}
+.au-feedback .feedback.error {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--panel));
+  animation: au-shake 0.35s ease both;
+}
+
+.au-social { display: grid; gap: 1rem; margin-top: 1.25rem; }
+.au-google {
+  display: flex;
+  min-height: 2.9rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.65rem;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.15s;
+}
+.au-google:hover:not(:disabled) { border-color: var(--text); background: var(--raised); }
+.au-google:active:not(:disabled) { transform: translateY(1px); }
+.au-google:disabled { opacity: 0.5; cursor: default; }
+.au-separator { display: flex; align-items: center; gap: 0.8rem; margin: 0; color: var(--subtle); font: 400 0.72rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.au-separator::before, .au-separator::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.au-form { display: grid; gap: 0.9rem; margin-top: 1.1rem; }
+.au-form > * { animation: au-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.au-form > :nth-child(1) { animation-delay: 0.1s; }
+.au-form > :nth-child(2) { animation-delay: 0.14s; }
+.au-form > :nth-child(3) { animation-delay: 0.18s; }
+.au-form > :nth-child(4) { animation-delay: 0.22s; }
+
+.au-field { display: grid; gap: 0.4rem; font-size: 0.9rem; font-weight: 600; }
+.au-field-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.au-field-heading a, .au-help a, .au-consent a { color: var(--text); text-underline-offset: 0.2em; }
+.au-field-heading a { font-weight: 500; font-size: 0.85rem; }
+.au-form input:not([type="checkbox"]) {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.65rem;
+  background: var(--canvas);
+  color: var(--text);
+  font: 400 1rem/1.3 var(--sans);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.au-form input::placeholder { color: var(--subtle); opacity: 0.75; }
+.au-form input:not([type="checkbox"]):hover { border-color: var(--text); }
+.au-form input:not([type="checkbox"]):focus { border-color: var(--text); outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 16%, transparent); }
+.au-form input:focus-visible { outline: none; }
+.au-password { position: relative; }
+.au-password input { padding-right: 3.1rem; }
+.au-password button {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: grid;
+  width: 2.9rem;
+  place-items: center;
+  border: 0;
+  border-radius: 0 0.65rem 0.65rem 0;
+  background: none;
+  color: var(--subtle);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.au-password button:hover { color: var(--text); }
+.au-password button:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
+.au-hint { color: var(--subtle); font-size: 0.82rem; font-weight: 400; margin: 0; }
+
+.au-consent { display: flex; align-items: flex-start; gap: 0.7rem; color: var(--subtle); font-size: 0.88rem; }
+.au-consent input { width: 1.25rem; height: 1.25rem; margin: 0.1rem 0 0; flex: none; accent-color: var(--accent); }
+
+.au-submit {
+  position: relative;
+  display: flex;
+  min-height: 2.9rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 640;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.au-submit:hover:not(:disabled) { border-color: var(--accent-hover); background: var(--accent-hover); box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--text) 50%, transparent); transform: translateY(-1px); }
+.au-submit:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+.au-submit:disabled { opacity: 0.7; cursor: progress; }
+.au-spinner { width: 1rem; height: 1rem; border: 2px solid color-mix(in srgb, var(--on-accent) 30%, transparent); border-top-color: var(--on-accent); border-radius: 50%; animation: au-spin 0.7s linear infinite; }
+.au-card :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+
+.au-advanced summary { display: flex; min-height: 2.75rem; align-items: center; color: var(--subtle); font-size: 0.9rem; cursor: pointer; }
+.au-advanced summary:hover { color: var(--text); }
+.au-advanced[open] summary { margin-bottom: 0.4rem; }
+
+.au-help { display: flex; flex-wrap: wrap; gap: 0 1.5rem; margin: 0.6rem 0 0; padding-top: 0.6rem; border-top: 1px solid var(--line); color: var(--subtle); font-size: 0.92rem; }
+.au-help span { display: flex; min-height: 2.75rem; align-items: center; gap: 0.3em; }
+.au-help:empty { display: none; }
+
+@keyframes au-rise { from { opacity: 0; transform: translateY(0.7rem); } }
+@keyframes au-shake { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+@keyframes au-spin { to { transform: rotate(1turn); } }
+
+/* ---------- Narrow and short screens ---------- */
+
+@media (max-width: 56rem) {
+  .au-main { place-items: start center; }
+  .au-card { grid-template-columns: 1fr; }
+  .au-aside { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; padding: 1.1rem; border-right: 0; border-bottom: 1px solid var(--line); }
+  .au-eyebrow, .au-aside-copy, .au-points { display: none; }
+  .au-aside-title { flex: 1 1 11rem; font-size: 1.5rem; }
+  .au-figure { flex: 0 1 11rem; }
+  .au-figure img { max-height: 6.5rem; }
+  .au-figure figcaption { display: none; }
+}
+@media (min-width: 56.01rem) and (max-height: 820px) {
+  .au-points, .au-aside-copy { display: none; }
+  .au-figure img { max-height: 24vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .au-card, .au-content, .au-form > *, .au-feedback .feedback { animation: none !important; }
+  .au-spinner { animation-duration: 1.6s; }
+  .au-submit, .au-google, .au-back, .au-form input { transition: none; }
+}

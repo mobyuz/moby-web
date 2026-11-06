@@ -50,6 +50,9 @@ async function scrollStep(page: Page, to: number, steps: number, delay: number) 
 }
 
 test("the hero model is still there after scrolling down and back up, slowly and fast, several times", async ({ page }) => {
+  // Four full cycles plus two screenshots under software GL take close to three minutes on a
+  // hosted runner, where the cycles passed and only the last screenshot ran out of time.
+  test.setTimeout(360_000);
   await page.setViewportSize({ width: 960, height: 540 });
   await page.goto("/");
   await expectLive(page);

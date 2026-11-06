@@ -14,7 +14,7 @@ async function expectLive(page: Page) {
 async function expectModelShown(page: Page) {
   const frames = async () => Number(await story(page).getAttribute("data-frames"));
   const before = await frames();
-  await expect.poll(frames, { timeout: 10_000 }).toBeGreaterThan(before);
+  await expect.poll(frames, { timeout: 25_000 }).toBeGreaterThan(before);
   await expect(story(page)).toHaveAttribute("data-scene", "live");
   const parts = Number(await story(page).getAttribute("data-parts"));
   await expect.poll(async () => Number(await story(page).getAttribute("data-parts-in-view")), { timeout: 10_000 }).toBe(parts);

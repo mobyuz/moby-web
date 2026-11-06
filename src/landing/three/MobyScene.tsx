@@ -336,9 +336,10 @@ function Rig({ faceEl, labelsEl, boxEl, active, onReady }: Omit<Props, "onLost" 
     // Reveal the scene after a few frames, once the shaders have compiled, so it never flashes empty.
     frames.current += 1;
     // Test hooks: how many frames were drawn and how many parts are inside the camera view.
-    if (frames.current % 5 === 0) {
+    {
       const root = faceEl.current?.closest<HTMLElement>(".story");
-      if (root) {
+      if (root && frames.current % 5 !== 0) root.dataset.frames = String(frames.current);
+      if (root && frames.current % 5 === 0) {
         let inView = 0;
         for (const part of model.parts) {
           tmp.v.copy(part.centre).addScaledVector(part.offset, part.pe).project(camera);
